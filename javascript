@@ -25,7 +25,7 @@ function doGet() {
 
 // ================= WEB APP APIs (UPDATED) =================
 
-// === Web App API for Punching (No Change) ===
+// === Web App API for Punching ===
 function webPunch(action, targetUserName, adminTimestamp) { 
   try {
     const puncherEmail = Session.getActiveUser().getEmail().toLowerCase();
@@ -36,7 +36,7 @@ function webPunch(action, targetUserName, adminTimestamp) {
   }
 }
 
-// === Web App API for Schedule Range (No Change) ===
+// === Web App API for Schedule Range ===
 function webSubmitScheduleRange(userEmail, userName, startDateStr, endDateStr, startTime, endTime, leaveType) {
   try {
     const puncherEmail = Session.getActiveUser().getEmail().toLowerCase();
@@ -47,7 +47,7 @@ function webSubmitScheduleRange(userEmail, userName, startDateStr, endDateStr, s
   }
 }
 
-// === Web App APIs for Leave Requests (UPDATED) ===
+// === Web App APIs for Leave Requests ===
 function webSubmitLeaveRequest(requestObject, targetUserEmail) { // Now accepts optional target user
   try {
     const submitterEmail = Session.getActiveUser().getEmail().toLowerCase();
@@ -86,7 +86,7 @@ function webApproveDenyRequest(requestID, newStatus) {
   }
 }
 
-// === Web App API for History (No Change) ===
+// === Web App API for History ===
 function webGetAdherenceRange(userNames, startDateStr, endDateStr) {
   try {
     const userEmail = Session.getActiveUser().getEmail().toLowerCase();
@@ -96,7 +96,7 @@ function webGetAdherenceRange(userNames, startDateStr, endDateStr) {
   }
 }
 
-// === Web App API for My Schedule (No Change) ===
+// === Web App API for My Schedule ===
 function webGetMySchedule() {
   try {
     const userEmail = Session.getActiveUser().getEmail().toLowerCase();
@@ -106,7 +106,7 @@ function webGetMySchedule() {
   }
 }
 
-// === Web App API for Admin Tools (No Change) ===
+// === Web App API for Admin Tools ===
 function webAdjustLeaveBalance(userEmail, leaveType, amount, reason) {
   try {
     const adminEmail = Session.getActiveUser().getEmail().toLowerCase();
@@ -125,8 +125,8 @@ function webImportScheduleCSV(csvData) {
   }
 }
 
-// === Web App API for Dashboard (UPDATED) ===
-function webGetDashboardData(userEmails, date) { // Now accepts user list and date
+// === Web App API for Dashboard ===
+function webGetDashboardData(userEmails, date) { 
   try {
     const adminEmail = Session.getActiveUser().getEmail().toLowerCase();
     return getDashboardData(adminEmail, userEmails, date);
@@ -136,7 +136,7 @@ function webGetDashboardData(userEmails, date) { // Now accepts user list and da
   }
 }
 
-// --- NEW: "My Team" Functions ---
+// --- MODIFIED: "My Team" Functions ---
 function webSaveMyTeam(userEmails) {
   try {
     const adminEmail = Session.getActiveUser().getEmail().toLowerCase();
@@ -155,7 +155,7 @@ function webGetMyTeam() {
   }
 }
 
-// --- NEW: Reporting Line Function ---
+// --- Web App API for Reporting Line ---
 function webUpdateReportingLine(userEmail, newSupervisorEmail) {
   try {
     const adminEmail = Session.getActiveUser().getEmail().toLowerCase();
@@ -167,7 +167,7 @@ function webUpdateReportingLine(userEmail, newSupervisorEmail) {
 // --- END OF WEB APP API SECTION ---
 
 
-// Get user info for front-end display (No Change)
+// Get user info for front-end display
 function getUserInfo() { 
   try {
     const userEmail = Session.getActiveUser().getEmail().toLowerCase();
@@ -203,8 +203,8 @@ function getUserInfo() {
   }
 }
 
-// ================= PUNCH MAIN FUNCTION (No Change) =================
-function punch(action, targetUserName, puncherEmail, adminTimestamp) { 
+// ================= PUNCH MAIN FUNCTION =================
+function punch(action, targetUserName, adminTimestamp) { 
   const ss = getSpreadsheet();
   const adherenceSheet = getOrCreateSheet(ss, SHEET_NAMES.adherence);
   const dbSheet = getOrCreateSheet(ss, SHEET_NAMES.database);
@@ -312,14 +312,14 @@ function punch(action, targetUserName, puncherEmail, adminTimestamp) {
     lastBreakOut: currentPunches[6], logout: currentPunches[7]
   };
 
-  // --- VALIDATION (No Change) ---
+  // --- VALIDATION ---
   if (!isAdmin) {
     if (action !== "Login" && !punches.login) {
       throw new Error("You must 'Login' first.");
     }
     const sequentialErrors = {
       "First Break Out": { required: punches.firstBreakIn, msg: "You must punch 'First Break In' first." },
-      "Lunch Out":       { required: punches.lunchIn,     msg: "You must punch 'Lunch In' first." },
+      "Lunch Out":       { required: punches.lunchIn,     msg: "YouS must punch 'Lunch In' first." },
       "Last Break Out":  { required: punches.lastBreakIn,   msg: "YouS must punch 'Last Break In' first." }
     };
     if (sequentialErrors[action] && !sequentialErrors[action].required) {
@@ -331,13 +331,13 @@ function punch(action, targetUserName, puncherEmail, adminTimestamp) {
     }
   }
 
-  // --- ADMIN AUDIT (No Change) ---
+  // --- ADMIN AUDIT ---
   if (isAdmin && (puncherEmail !== userEmail || adminTimestamp)) { 
     adherenceSheet.getRange(row, 15).setValue("Yes");
     adherenceSheet.getRange(row, 21).setValue(puncherEmail);
   }
 
-  // === SAVE PUNCH (No Change) ===
+  // === SAVE PUNCH ===
   adherenceSheet.getRange(row, col).setValue(nowTimestamp);
   logsSheet.appendRow([new Date(), userName, userEmail, action, nowTimestamp]); 
   
@@ -346,7 +346,7 @@ function punch(action, targetUserName, puncherEmail, adminTimestamp) {
     punches[actionKey.replace(/\s+/g, '').replace('1st', 'first').replace('Out', 'Out').replace('In', 'In').toLowerCase()] = nowTimestamp;
   }
 
-  // === DATE-AWARE SHIFT METRICS (No Change) ===
+  // === DATE-AWARE SHIFT METRICS ===
   const shiftStartDate = createDateTime(shiftDate, shiftStartStr);
   let shiftEndDate = createDateTime(shiftDate, shiftEndStr);
   
@@ -392,7 +392,7 @@ function punch(action, targetUserName, puncherEmail, adminTimestamp) {
     }
   }
 
-  // === BREAK EXCEED CALCULATIONS (No Change) ===
+  // === BREAK EXCEED CALCULATIONS ===
   let exceedMsg = "No";
   let duration = 0;
   let diff = 0;
@@ -420,7 +420,7 @@ function punch(action, targetUserName, puncherEmail, adminTimestamp) {
 }
 
 
-// ================= SCHEDULE RANGE SUBMIT FUNCTION (No Change) =================
+// ================= SCHEDULE RANGE SUBMIT FUNCTION =================
 function submitScheduleRange(puncherEmail, userEmail, userName, startDateStr, endDateStr, startTime, endTime, leaveType) {
   const ss = getSpreadsheet();
   const dbSheet = getOrCreateSheet(ss, SHEET_NAMES.database);
@@ -484,7 +484,7 @@ function submitScheduleRange(puncherEmail, userEmail, userName, startDateStr, en
   return `Schedule submission complete for ${userName}. Days processed: ${daysProcessed} (Updated: ${daysUpdated}, Created: ${daysCreated}).`;
 }
 
-// (Helper for above - No Change)
+// (Helper for above)
 function updateOrAddSingleSchedule(scheduleSheet, userScheduleMap, logsSheet, userEmail, userName, targetDate, targetDateStr, startTime, endTime, leaveType, puncherEmail) {
   
   const existingRow = userScheduleMap[targetDateStr];
@@ -538,23 +538,23 @@ function getUserDataFromDb(dbSheet) {
   const emailToRole = {}; 
   const emailToBalances = {}; 
   const emailToRow = {}; 
-  const emailToSupervisor = {}; // NEW
+  const emailToSupervisor = {}; 
   const userList = []; 
   
   for (let i = 1; i < dbData.length; i++) {
-    let [name, email, role, annual, sick, casual, supervisor] = dbData[i]; // NEW: Read column 7
+    let [name, email, role, annual, sick, casual, supervisor] = dbData[i]; 
     
     if (name && email) {
       const cleanName = name.toString().trim();
       const cleanEmail = email.toString().trim().toLowerCase();
       const userRole = (role || 'agent').toString().trim().toLowerCase(); 
-      const supervisorEmail = (supervisor || "").toString().trim().toLowerCase(); // NEW
+      const supervisorEmail = (supervisor || "").toString().trim().toLowerCase(); 
       
       nameToEmail[cleanName] = cleanEmail; 
       emailToName[cleanEmail] = cleanName;
       emailToRole[cleanEmail] = userRole; 
       emailToRow[cleanEmail] = i + 1; 
-      emailToSupervisor[cleanEmail] = supervisorEmail; // NEW
+      emailToSupervisor[cleanEmail] = supervisorEmail; 
       
       emailToBalances[cleanEmail] = {
         annual: parseFloat(annual) || 0,
@@ -567,12 +567,12 @@ function getUserDataFromDb(dbSheet) {
         email: cleanEmail, 
         role: userRole,
         balances: emailToBalances[cleanEmail],
-        supervisor: supervisorEmail // NEW
+        supervisor: supervisorEmail 
       }); 
     }
   }
   userList.sort((a, b) => a.name.localeCompare(b.name)); 
-  return { nameToEmail, emailToName, emailToRole, emailToBalances, emailToRow, emailToSupervisor, userList }; // UPDATED
+  return { nameToEmail, emailToName, emailToRole, emailToBalances, emailToRow, emailToSupervisor, userList }; 
 }
 
 // (No Change)
@@ -722,7 +722,7 @@ function timeDiffInSeconds(start, end) {
 }
 
 
-// ================= DAILY AUTO-LOG FUNCTION (No Change) =================
+// ================= DAILY AUTO-LOG FUNCTION =================
 function dailyLeaveSweeper() {
   const ss = getSpreadsheet();
   const scheduleSheet = getOrCreateSheet(ss, SHEET_NAMES.schedule);
@@ -819,7 +819,7 @@ function dailyLeaveSweeper() {
   Logger.log(`dailyLeaveSweeper finished. Logged ${missedLogs} missed users.`);
 }
 
-// ================= LEAVE REQUEST FUNCTIONS (UPDATED) =================
+// ================= LEAVE REQUEST FUNCTIONS =================
 
 // (Helper - No Change)
 function convertDateToString(dateObj) {
@@ -1357,7 +1357,7 @@ function importScheduleCSV(adminEmail, csvData) {
   return `Import successful. Records Created: ${daysCreated}, Records Updated: ${daysUpdated}.`;
 }
 
-// (No Change)
+// MODIFIED: Logic updated to handle 'ALL_USERS' and load team data if needed.
 function getDashboardData(adminEmail, userEmails, date) {
   const ss = getSpreadsheet();
   const dbSheet = getOrCreateSheet(ss, SHEET_NAMES.database);
@@ -1370,21 +1370,22 @@ function getDashboardData(adminEmail, userEmails, date) {
   
   const timeZone = Session.getScriptTimeZone();
   
-  // UPDATED: Use the date from the date picker
+  // Use the date from the date picker
   const targetDate = new Date(date);
   const targetDateStr = Utilities.formatDate(targetDate, timeZone, "MM/dd/yyyy");
   
   // --- UPDATED: Filter by selected users ---
   let targetUserEmails;
-  // FIX: Check for 'ALL_USERS' signal
+  // Check for 'ALL_USERS' signal which means nothing was selected in the custom dropdown
   if (userEmails && userEmails.length === 1 && userEmails[0] === 'ALL_USERS') {
-    // If no team is saved, 'ALL_USERS' will load everyone
+    // Attempt to load the user's saved team first
     targetUserEmails = getMyTeam(adminEmail);
+    // If no team is saved, default to ALL users in the database
     if (targetUserEmails.length === 0) {
       targetUserEmails = userData.userList.map(u => u.email);
     }
   } else {
-    // Use the specific list provided
+    // Use the specific list provided by the custom dropdown
     targetUserEmails = userEmails;
   }
   const targetUserSet = new Set(targetUserEmails);
@@ -1392,7 +1393,7 @@ function getDashboardData(adminEmail, userEmails, date) {
   
   const statusMap = {
     "Logged In": 0,
-    "On Break/Other": 0, // NEW: Combined Status
+    "On Break/Other": 0,
     "On Leave": 0,
     "Absent": 0,
     "Pending Login": 0,
@@ -1407,8 +1408,8 @@ function getDashboardData(adminEmail, userEmails, date) {
     totalLunchExceed: 0
   };
   
-  // NEW: Individual metrics
-  const userMetricsMap = {}; // Helper map
+  // Individual metrics
+  const userMetricsMap = {}; 
   targetUserEmails.forEach(email => {
     const name = userData.emailToName[email] || email;
     userMetricsMap[name] = {
@@ -1569,18 +1570,15 @@ function getDashboardData(adminEmail, userEmails, date) {
     const row = reqData[i];
     // FILTER: Check if this request is from a user in our target set
     const reqEmail = (row[2] || "").toLowerCase();
-    // --- THIS IS THE FIX ---
+    
     if (row[1] && row[1].toString().trim().toLowerCase() === 'pending' && targetUserSet.has(reqEmail)) {
       try {
-        // --- THIS IS THE FIX for "na" ---
-        // Send an OBJECT, not an array
         pendingRequests.push({
           name: row[3], // Name
           type: row[4], // Type
           startDate: convertDateToString(new Date(row[5])), // Start Date
           days: row[7]  // Total Days
         });
-        // --- END FIX ---
       } catch (e) {
         Logger.log(`Failed to parse pending request row ${i+1}. Error: ${e.message}`);
       }
@@ -1604,6 +1602,7 @@ function getDashboardData(adminEmail, userEmails, date) {
 // --- NEW: "My Team" Helper Functions ---
 function saveMyTeam(adminEmail, userEmails) {
   try {
+    // Uses Google Apps Script's built-in User Properties for saving user-specific settings.
     const userProperties = PropertiesService.getUserProperties();
     userProperties.setProperty('myTeam', JSON.stringify(userEmails));
     return "Successfully saved 'My Team' preference.";
@@ -1615,13 +1614,15 @@ function saveMyTeam(adminEmail, userEmails) {
 function getMyTeam(adminEmail) {
   try {
     const userProperties = PropertiesService.getUserProperties();
-    // NEW: Add permission check. This forces the auth dialog.
+    // Getting properties implicitly forces the Google auth dialog if needed.
     const properties = userProperties.getProperties(); 
     const myTeam = properties['myTeam'];
     return myTeam ? JSON.parse(myTeam) : [];
   } catch (e) {
     Logger.log("Failed to load team preferences: " + e.message);
-    throw new Error("Failed to load team preferences: " + e.message);
+    // Throwing an error here would break the dashboard's initial load. 
+    // We return an empty array instead, and let the front-end handle the fallback.
+    return [];
   }
 }
 
