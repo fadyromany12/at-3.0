@@ -21,25 +21,32 @@
         --konecta-blue: #00a9e0;
         --konecta-dark: #2101cd; 
         --konecta-yellow: #f0fa00; 
-        
-        /* Hint of Superadmin color for Admin/Superadmin elements, slightly toned down */
-        --role-admin-header: #3b1f9b; 
-        --role-admin-text: white; 
 
         /* Core UI - LIGHT MODE */
+        /* CHANGE 1: Swapped primary text color from Konecta Blue (#2101cd) to a soft black (#212121) */
         --text-color: #212121; 
-        --text-color-secondary: #5f6368; 
-        --page-bg: #f4f7f6; 
+        --text-color-secondary: #5f6368; /* Google Gray for secondary/hint text */
+        --page-bg: #f4f7f6; /* Light White/Grey */
         --card-bg: #ffffff;
         --border-color: #e0e0e0;
         --input-bg: #f8f9fa;
         --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         --radius: 12px;
 
-        /* Role Colors (User-Defined) - Simplified to just use for badge backgrounds */
+        /* Role Colors (User-Defined) */
         --role-user-bg: #f4f7f6; 
         --role-admin-bg: #f0fa00;
         --role-superadmin-bg: #2101cd;
+        
+        /* Status Colors (Unified) */
+        --status-pending: #feefc3; /* Yellowish */
+        --status-pending-text: #744210;
+        --status-login: #edfbf3; /* Light Green (Logged In, Ready) */
+        --status-login-text: #2a6944;
+        --status-break: #e6f4ff; /* Light Blue (Break/Other Code) */
+        --status-break-text: #174b85;
+        --status-leave: #fdebee; /* Light Red (Absent/Leave/Logged Out) */
+        --status-leave-text: #c53030;
       }
 
       /* DARK MODE OVERRIDES */
@@ -54,16 +61,23 @@
         
         /* Adjusting role backgrounds for dark mode visibility */
         --role-user-bg: #252525; 
-        --role-admin-bg: #a1a600; 
-        --role-superadmin-bg: #0d015c; 
-        --role-admin-header: #0d015c;
-        --role-admin-text: #f4f7f6;
+        --role-admin-bg: #a1a600; /* Muted Yellow */
+        --role-superadmin-bg: #0d015c; /* Muted Dark Blue */
+        
+        /* Status Colors (Dark Mode) */
+        --status-pending: #4b2a0c; 
+        --status-pending-text: #f9da8a;
+        --status-login: #1a4f2b; 
+        --status-login-text: #b8e9c9;
+        --status-break: #103a5c; 
+        --status-break-text: #96c4e0;
+        --status-leave: #7b1d1d; 
+        --status-leave-text: #fbb2b2;
       }
       
       /* --- Global Transitions and Font --- */
       * {
-        /* Set smooth transition for everything for the "advanced" feel */
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth Material Design-like curve */
       }
       
       body, html {
@@ -71,47 +85,69 @@
         margin: 0; 
         padding: 0;
         background-color: var(--page-bg);
-        color: var(--text-color); 
+        color: var(--text-color);
+        /* MODIFIED: Ensure body takes up full screen height */
+        min-height: 100vh;
+      }
+      
+      body {
+        /* MODIFIED: Use flexbox for sticky footer/full height layout */
+        display: flex;
+        flex-direction: column;
       }
       
       h1, h2, h3, h4, strong {
-        color: var(--text-color); 
+        color: var(--text-color);
       }
       
-      /* --- Role-Based Customization (Simplified) --- */
-      /* All main content uses standard light/dark theme colors */
-      
-      body[data-role="admin"] header,
-      body[data-role="superadmin"] header {
-        background-color: var(--role-admin-header); /* Hint of Superadmin color */
-        border-color: var(--role-admin-header);
-      }
-      body[data-role="admin"] header #logo-container,
-      body[data-role="superadmin"] header #logo-container {
-        border-color: var(--role-admin-header);
-      }
-      body[data-role="admin"] #admin-panel,
-      body[data-role="superadmin"] #admin-panel {
-        background-color: var(--role-admin-header);
-        color: var(--role-admin-text);
-        border-color: var(--role-admin-header);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-      }
-      body[data-role="admin"] #admin-panel label,
-      body[data-role="superadmin"] #admin-panel label {
-        color: var(--role-admin-text);
+      /* --- Role-Based Body Background (The Revolution!) --- */
+      body[data-role="agent"] main, body[data-role="agent"] header {
+          background-color: var(--card-bg); /* Use standard card BG for user role area */
       }
 
+      body[data-role="admin"] header {
+        background-color: var(--role-admin-bg);
+        border-color: var(--role-admin-bg);
+      }
+      body[data-role="admin"] header h1, body[data-role="admin"] header .header-kap {
+        color: black;
+      }
+      body[data-role="admin"] main {
+        border: 2px solid var(--role-admin-bg);
+      }
+      body[data-role="admin"] #admin-panel {
+        background-color: var(--role-admin-bg);
+        border-color: var(--role-admin-bg);
+        color: black;
+        box-shadow: 0 4px 10px rgba(var(--role-admin-bg), 0.3);
+      }
+      
+      body[data-role="superadmin"] header {
+        background-color: var(--role-superadmin-bg);
+        border-color: var(--role-superadmin-bg);
+      }
+      body[data-role="superadmin"] header h1, body[data-role="superadmin"] header .header-kap {
+        color: white;
+      }
+      body[data-role="superadmin"] main {
+        border: 2px solid var(--role-superadmin-bg);
+      }
+      body[data-role="superadmin"] #admin-panel {
+        background-color: var(--role-superadmin-bg);
+        border-color: var(--role-superadmin-bg);
+        color: white;
+        box-shadow: 0 4px 10px rgba(var(--role-superadmin-bg), 0.3);
+      }
 
       /* --- Header with Logo and Dark Mode Button --- */
       header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 20px 30px; 
+        padding: 15px 30px;
         background-color: var(--card-bg);
         border-bottom: 2px solid var(--border-color);
-        position: sticky; 
+        position: sticky; /* Keep it visible */
         top: 0;
         z-index: 100;
       }
@@ -120,49 +156,47 @@
         align-items: center;
         gap: 15px;
       }
-      
-      /* NEW: Logo Container Styling (Bordered Cool Rectangle) */
-      #logo-container {
-          padding: 10px 15px;
-          background-color: var(--card-bg); 
-          border: 2px solid var(--konecta-blue);
-          border-radius: var(--radius);
-          box-shadow: 0 4px 15px rgba(0, 169, 224, 0.2); 
-          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-          cursor: pointer;
-      }
-      #logo-container:hover {
-          transform: translateY(-3px) scale(1.02);
-          box-shadow: 0 8px 20px rgba(0, 169, 224, 0.4);
-      }
-      #konecta-logo {
-        height: 40px; 
+      header img {
+        height: 30px;
         width: auto;
-        transition: none;
       }
-
+      header h1 { 
+        color: var(--text-color);
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
       
-      /* --- Dark Mode & Refresh Buttons --- */
-      #header-refresh-button, #dark-mode-button {
+      .header-kap {
+        color: var(--konecta-blue);
+        font-weight: 700;
+        margin-left: 5px;
+      }
+      
+      /* --- Refresh Button (Kept) --- */
+      #header-refresh-button {
         background: var(--input-bg);
         border: 1px solid var(--border-color);
         cursor: pointer;
-        padding: 10px; 
+        padding: 8px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       }
-      #header-refresh-button:hover, #dark-mode-button:hover {
+      #header-refresh-button:hover {
         opacity: 0.9;
-        transform: scale(1.1); 
+        transform: scale(1.05);
         background-color: var(--page-bg);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       }
-      #header-refresh-button img, #dark-mode-button img {
+      #header-refresh-button img {
         width: 18px;
         height: 18px;
+        /* The filter is handled by JS on theme change */
       }
       #header-refresh-button.loading img {
         animation: spin 1s linear infinite;
@@ -171,26 +205,91 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
+      
+      /* --- Dark Mode Toggle Switch (NEW STYLES) --- */
+      .dark-mode-toggle-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        height: 34px; /* Matches the vertical space of the refresh button */
+        margin-right: 5px; /* Adds spacing */
+      }
+
+      #dark-mode-toggle {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .switch-label {
+        position: relative;
+        display: block;
+        width: 60px;
+        height: 34px;
+        border-radius: 17px;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .switch-label:before {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background-color: var(--konecta-blue);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+      }
+
+      /* Icons inside the toggle */
+      .sun-icon, .moon-icon {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        transition: opacity 0.3s ease;
+      }
+
+      .sun-icon {
+        left: 8px;
+        opacity: 1; /* Visible by default (light mode) */
+      }
+
+      .moon-icon {
+        right: 8px;
+        opacity: 0; /* Hidden by default */
+      }
+
+      /* Checked state (Dark Mode) */
+      #dark-mode-toggle:checked + .switch-label:before {
+        transform: translateX(26px);
+        background-color: var(--konecta-dark); /* Darker color for dark mode state */
+      }
+
+      #dark-mode-toggle:checked + .switch-label .sun-icon {
+        opacity: 0;
+      }
+
+      #dark-mode-toggle:checked + .switch-label .moon-icon {
+        opacity: 1;
+      }
+      /* --- END Dark Mode Toggle Switch --- */
 
       /* --- Centered Card Layout --- */
       main {
         max-width: 1100px;
-        margin: 30px auto;
+        /* MODIFIED: Set bottom margin to 0 for sticky footer */
+        margin: 30px auto 0 auto; 
         background-color: var(--card-bg);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         overflow: hidden;
-        /* Removed role-based borders on main content */
-      }
-      
-      /* --- Enhanced Card/Item Animations (Advanced Feel) --- */
-      .dashboard-card, .request-list-item, #agent-info, #admin-panel {
-        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
-        position: relative;
-      }
-      .dashboard-card:hover, .request-list-item:hover {
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); 
-        transform: translateY(-4px); 
+        flex-grow: 1; /* MODIFIED: Allows main to expand and push footer down */
       }
       
       /* --- Tab Navigation --- */
@@ -198,8 +297,8 @@
         border-bottom: 1px solid var(--border-color);
         padding-top: 10px;
         display: flex;
-        justify-content: flex-start; 
-        overflow-x: auto; 
+        justify-content: flex-start; /* Align left */
+        overflow-x: auto; /* Allow horizontal scroll on mobile */
         padding-left: 30px;
         background-color: var(--card-bg);
       }
@@ -213,7 +312,7 @@
         border-bottom: 3px solid transparent;
         transition: all 0.3s ease;
         color: var(--text-color-secondary);
-        white-space: nowrap; 
+        white-space: nowrap; /* Prevent wrapping */
       }
       .tab-button:hover {
         background-color: var(--input-bg);
@@ -250,6 +349,7 @@
         text-align: center;
         font-size: 1.1em;
         position: relative; 
+        transition: all 0.3s ease;
       }
       
       #admin-panel {
@@ -261,6 +361,7 @@
         margin-bottom: 20px;
         text-align: center;
         font-weight: 500;
+        transition: all 0.3s ease;
       }
       #admin-panel label {
         font-weight: 600;
@@ -303,14 +404,14 @@
         background-color: var(--konecta-blue);
         color: white;
         letter-spacing: 0.5px;
-        box-shadow: 0 4px 10px rgba(0, 169, 224, 0.3); 
+        box-shadow: 0 4px 10px rgba(0, 169, 224, 0.3); /* Blue shadow */
         transition: all 0.2s ease-out; 
         min-width: 160px;
       }
       button:hover {
         background-color: #008fbc;
-        transform: translateY(-3px) scale(1.02); 
-        box-shadow: 0 8px 18px rgba(0, 169, 224, 0.5); 
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 169, 224, 0.4);
       }
       
       #other-buttons button {
@@ -319,8 +420,8 @@
       }
        #other-buttons button:hover {
         background-color: #3c4043;
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 18px rgba(95, 99, 104, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(95, 99, 104, 0.3);
       }
       
       .button-group {
@@ -404,7 +505,7 @@
         display: block;
         font-weight: 500;
         margin-bottom: 8px;
-        color: var(--text-color-secondary); 
+        color: var(--text-color-secondary); /* Calm font color for labels */
       }
       .form-group select, .form-group input, .form-group textarea {
         width: 100%;
@@ -418,6 +519,7 @@
         font-family: 'Inter', Arial, sans-serif;
       }
       .form-group input[type="date"], .form-group input[type="time"] {
+        /* Fixes date/time text alignment in some browsers in dark mode */
         color-scheme: var(--dark-mode-scheme, light); 
       }
       body.dark-mode {
@@ -475,7 +577,7 @@
         margin-top: 5px;
       }
       
-      /* --- Leave List Styles --- */
+      /* --- Leave List Styles (Reused for Dashboard Tables) --- */
       .request-list {
         margin-top: 30px;
         padding-top: 20px;
@@ -490,6 +592,11 @@
         display: flex;
         align-items: flex-start;
         gap: 15px;
+        transition: all 0.3s ease;
+      }
+      .request-list-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       }
       
       .request-list-item .item-details {
@@ -520,14 +627,18 @@
         margin-top: 5px;
         text-transform: uppercase;
       }
-      .status-pending { background-color: #feefc3; color: #744210; }
-      .status-approved { background-color: #edfbf3; color: #2a6944; }
-      .status-denied { background-color: #fdebee; color: #c53030; }
-      
-      body.dark-mode .status-pending { background-color: #4b2a0c; color: #f9da8a; }
-      body.dark-mode .status-approved { background-color: #1a4f2b; color: #b8e9c9; }
-      body.dark-mode .status-denied { background-color: #7b1d1d; color: #fbb2b2; }
+      .status-pending { background-color: var(--status-pending); color: var(--status-pending-text); }
+      .status-approved { background-color: var(--status-login); color: var(--status-login-text); }
+      .status-denied { background-color: var(--status-leave); color: var(--status-leave-text); }
 
+      /* NEW: Dashboard Agent Status Styles */
+      .status-Logged-In { background-color: var(--status-login); color: var(--status-login-text); }
+      .status-On-Break/Other { background-color: var(--status-break); color: var(--status-break-text); }
+      .status-On-Leave { background-color: var(--status-leave); color: var(--status-leave-text); }
+      .status-Absent { background-color: var(--status-leave); color: var(--status-leave-text); }
+      .status-Pending-Login { background-color: var(--status-pending); color: var(--status-pending-text); }
+      .status-Logged-Out { background-color: var(--status-leave); color: var(--status-leave-text); }
+      
       .item-actions .approve-btn,
       .item-actions .deny-btn {
         min-width: 100px;
@@ -664,11 +775,12 @@
         color: white;
       }
       
-      /* --- Dashboard Grid --- */
+      /* --- Dashboard Grid Restructure (MODIFIED) --- */
       #dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
+          display: grid;
+          /* Flexible columns: 2 per row when space allows (min-width 350px per column) */
+          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+          gap: 20px;
       }
       .dashboard-card {
         background-color: var(--input-bg);
@@ -677,6 +789,7 @@
         padding: 20px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
       }
+      /* Ensure full width items span across all columns in the flexible grid */
       .dashboard-card.full-width {
         grid-column: 1 / -1;
       }
@@ -689,22 +802,8 @@
       }
       .chart-container, .table-container {
         width: 100%;
-        min-height: 250px;
+        min-height: 350px; /* Increased height for better chart viewing */
         overflow-y: auto;
-      }
-      
-      /* Dashboard Table Column Width Fix */
-      #adherence-detail-table .report-table {
-          table-layout: fixed;
-          width: 100%;
-      }
-      /* Column 2 is the 'User' name (after the default Google Charts Row Number column) */
-      #adherence-detail-table .report-table th:nth-child(2),
-      #adherence-detail-table .report-table td:nth-child(2) {
-          width: 25%; /* Restricting width of the User column */
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
       }
 
       /* --- Section divider --- */
@@ -713,9 +812,129 @@
         border-top: 1px solid var(--border-color);
         margin: 30px 0;
       }
+      
+      /* --- FOOTER STYLES (NEW/MODIFIED) --- */
+      footer {
+        padding: 15px 30px;
+        margin-top: auto; /* Pushes the footer to the bottom of the content/viewport */
+        text-align: center; /* Centers the text horizontally */
+        width: 100%;
+        background-color: var(--card-bg); 
+        border-top: 1px solid var(--border-color); 
+        box-sizing: border-box;
+        color: var(--text-color-secondary); 
+      }
+      
+      footer p {
+        margin: 0; /* Remove default paragraph margin */
+        font-size: 0.9rem;
+      }
+
+      /* --- Dashboard Table Styling --- */
+      
+      /* Style container to look like approval list */
+      .dashboard-list-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding-top: 10px; 
+      }
+      
+      /* Style item cards for Dashboard Details */
+      .dashboard-detail-item {
+        background-color: var(--card-bg); /* Use card BG for contrast */
+        border: 1px solid var(--border-color);
+        border-left: 5px solid var(--konecta-blue);
+        border-radius: 8px;
+        padding: 15px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* Default grid layout for details */
+        gap: 10px 5px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      }
+      .dashboard-detail-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .dashboard-detail-item .detail-label {
+        font-weight: 500;
+        color: var(--text-color-secondary);
+        white-space: nowrap;
+      }
+
+      .dashboard-detail-item .detail-value {
+        font-weight: 600;
+        color: var(--text-color);
+        grid-column: span 2; /* Value spans the rest of the row */
+        text-align: right;
+      }
+      
+      /* Specific styling for the Pending Leave Table - matches approval list */
+      .dashboard-leave-item {
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-left: 5px solid #34a853; /* Use green border for pending leave */
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 15px;
+        transition: all 0.3s ease;
+      }
+      .dashboard-leave-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .dashboard-leave-item .item-details {
+        flex: 1;
+      }
+      .dashboard-leave-item .item-details h4 {
+        margin: 0 0 5px 0;
+        color: var(--text-color);
+        font-size: 1em;
+      }
+      .dashboard-leave-item .item-details p {
+        margin: 2px 0;
+        font-size: 0.9rem;
+        color: var(--text-color-secondary);
+      }
+      
+      /* NEW: Agent Status List Item */
+      .agent-status-item {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease-in-out;
+      }
+      .agent-status-item:hover {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+      .agent-status-item strong {
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .status-tag {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
 
       /* --- Responsive Design --- */
       @media (max-width: 900px) {
+        /* Dashboard grid defaults to 1 column due to minmax(350px) but we explicitly set it for clarity */
         #dashboard-grid {
           grid-template-columns: 1fr;
         }
@@ -752,27 +971,38 @@
             text-align: left;
             margin-top: 10px;
         }
+        
+        .dashboard-detail-item {
+           /* On small screens, stack details better */
+           grid-template-columns: 1fr 1fr;
+        }
+        .dashboard-detail-item .detail-value {
+           grid-column: span 1;
+           text-align: left;
+        }
       }
     </style>
   </head>
   <body>
     <header>
-      <!-- NEW: Logo wrapped in container for border/shadow effect -->
-      <div id="logo-container">
-        <img id="konecta-logo" 
-             src="https://www.theinnovationgroup.it/wp-content/uploads/2025/02/180225_LogoKonecta_425x200.jpg" 
-             alt="Konecta Logo">
-      </div>
+      <img src="https://th.bing.com/th/id/OIP.gafgWpiLoUVHSxGah643xQHaCa?w=338&h=114&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3" alt="Konecta Logo">
       <div class="header-controls">
-        <!-- Dark Mode Toggle: Uses Sun for Light and Moon for Dark -->
-        <button id="dark-mode-button" title="Toggle Dark Mode" onclick="toggleDarkMode()">
-           <!-- Icon source remains correct for Sun/Moon toggle -->
-          <img id="dark-mode-icon" src="https://downloadr2.apkmirror.com/wp-content/uploads/2019/10/5db102cb08750-384x384.png" alt="Theme Icon">
-        </button>
+        <h1>
+          KAP
+        </h1>
+        
+        <!-- MODIFIED: Dark Mode Toggle Switch (replacing the old button/icon) -->
+        <div class="dark-mode-toggle-wrapper" title="Toggle Dark Mode">
+            <input type="checkbox" id="dark-mode-toggle">
+            <label for="dark-mode-toggle" class="switch-label">
+                <span class="sun-icon">☀️</span>
+                <span class="moon-icon">🌙</span>
+            </label>
+        </div>
+        
         <!-- Header Refresh Button -->
         <button id="header-refresh-button" title="Refresh Data" onclick="refreshCurrentData()">
-          <!-- Icon source remains correct for Refresh icon -->
-          <img id="refresh-icon" src="https://cdn-icons-png.flaticon.com/512/560/560512.png" alt="Refresh Icon">
+          <img id="refresh-icon" src="https://icons.veryicon.com/png/o/miscellaneous/two-color-webpage-small-icon/refresh-174.png" alt="Refresh Icon">
         </button>
       </div>
     </header>
@@ -995,22 +1225,27 @@
           
           <hr class="section-divider">
           
+          <!-- MODIFIED: The grid is now responsive with 2 columns on desktop -->
           <div id="dashboard-grid">
             <div class="dashboard-card">
-              <h3>Current User Status</h3>
-              <div id="status-pie-chart" class="chart-container"></div>
+              <!-- MODIFIED: Changed the title to reflect the new list display -->
+              <h3>Agent Status (Real-Time)</h3>
+              <!-- MODIFIED: This now holds the list of agents and their statuses -->
+              <div id="status-agent-list" class="chart-container"></div>
             </div>
             <div class="dashboard-card">
-              <h3>Total Adherence Metrics</h3>
+              <h3>Total Adherence Deviations</h3>
               <div id="adherence-bar-chart" class="chart-container"></div>
             </div>
             <div class="dashboard-card full-width">
-              <h3>Adherence Details</h3>
-              <div id="adherence-detail-table" class="table-container"></div>
+              <h3>Adherence Details (Today)</h3>
+              <!-- MODIFIED: Changed the container to display list-style cards -->
+              <div id="adherence-detail-table" class="dashboard-list-container"></div>
             </div>
             <div class="dashboard-card full-width">
               <h3>Pending Leave Requests (for selected users)</h3>
-              <div id="pending-leave-table" class="chart-container"></div>
+              <!-- MODIFIED: Changed the container to display list-style cards -->
+              <div id="pending-leave-table" class="dashboard-list-container"></div>
             </div>
           </div>
         </div>
@@ -1041,8 +1276,9 @@
       </div> <!-- End .content-container -->
     </main> <!-- End .card -->
 
+    <!-- MODIFIED: Footer is now positioned by CSS/Flexbox -->
     <footer>
-      <p style="color:var(--text-color-secondary)">Konecta Adherence Portal - Created by Fady Bekhet</p>
+      <p>Konecta Adherence Portal - Created by Fady Bekhet</p>
     </footer>
 
 
@@ -1054,49 +1290,49 @@
       let lastHistoryData = null;
       let chartsLoaded = false; 
       
-      // --- NEW: Dark Mode Functions ---
+      // --- NEW/MODIFIED: Dark Mode Functions (Removed direct icon manipulation) ---
       const DARK_MODE_KEY = 'kap_dark_mode';
       
-      // Icon sources
-      const SUN_ICON = "https://www.svgrepo.com/show/396652/sun.svg";
-      const MOON_ICON = "https://www.svgrepo.com/show/532395/moon.svg";
-      const REFRESH_ICON = "https://icons.veryicon.com/png/o/miscellaneous/two-color-webpage-small-icon/refresh-174.png";
+      // New core function called by the checkbox event listener
+      function toggleThemeState() {
+          // Read the current state of the checkbox
+          const toggleInput = document.getElementById('dark-mode-toggle');
+          // Checkbox is already toggled when this event fires
+          const newThemeIsDark = toggleInput.checked; 
+          
+          applyTheme(newThemeIsDark);
+          localStorage.setItem(DARK_MODE_KEY, newThemeIsDark ? 'enabled' : 'disabled');
+      }
 
       function applyTheme(isDark) {
         const body = document.body;
-        const icon = document.getElementById('dark-mode-icon');
-        const allIcons = document.querySelectorAll('#header-refresh-button img, #dark-mode-button img');
+        const toggleInput = document.getElementById('dark-mode-toggle');
         
         if (isDark) {
           body.classList.add('dark-mode');
           body.setAttribute('data-theme', 'dark');
-          if (icon) icon.src = MOON_ICON; // Update icon to MOON
+          if (toggleInput) toggleInput.checked = true; // Set checkbox state
           
-          // Invert all non-theme icons in dark mode
-          allIcons.forEach(img => {
-            if (img.id !== 'dark-mode-icon') {
-              img.style.filter = 'invert(100%)';
-            }
+          // Invert the refresh icon
+          document.querySelectorAll('#header-refresh-button img').forEach(img => {
+               img.style.filter = 'invert(100%)';
           });
-          // Refresh icon needs to be forced to 'none' if it's the specific PNG which is already color-appropriate
-          document.getElementById('refresh-icon').style.filter = 'none'; 
-
+          
         } else {
           body.classList.remove('dark-mode');
           body.setAttribute('data-theme', 'light');
-          if (icon) icon.src = SUN_ICON; // Update icon to SUN
-          
-          allIcons.forEach(img => {
-             img.style.filter = 'none';
+          if (toggleInput) toggleInput.checked = false; // Set checkbox state
+
+          // Reset the refresh icon filter
+          document.querySelectorAll('#header-refresh-button img').forEach(img => {
+               img.style.filter = 'none';
           });
         }
-      }
-
-      function toggleDarkMode() {
-        const isDark = document.body.classList.contains('dark-mode');
-        const newTheme = !isDark;
-        applyTheme(newTheme);
-        localStorage.setItem(DARK_MODE_KEY, newTheme ? 'enabled' : 'disabled');
+        
+        // Re-draw charts when theme changes to apply new colors
+        if (chartsLoaded && window.lastDashboardData) {
+            drawDashboard(window.lastDashboardData);
+        }
       }
 
       function initializeTheme() {
@@ -1111,7 +1347,16 @@
             initialTheme = false;
         }
         
-        applyTheme(initialTheme);
+        // Use a slight delay to ensure the DOM element for the toggle is ready
+        setTimeout(() => {
+            applyTheme(initialTheme);
+            
+            const toggleInput = document.getElementById('dark-mode-toggle');
+            if (toggleInput) {
+                // Attach listener only after the DOM is fully loaded and theme is set
+                toggleInput.addEventListener('change', toggleThemeState);
+            }
+        }, 0); 
       }
       
       // --- Status Message Utility ---
@@ -1163,7 +1408,10 @@
           }).getUserInfo();
         } else if (tabName === 'my-schedule') {
           loadMySchedule();
-        } 
+        } else if (tabName === 'dashboard' && window.lastDashboardData) {
+            // Re-draw dashboard on tab switch if data exists to ensure current theme applies
+            drawDashboard(window.lastDashboardData);
+        }
       }
       
       // --- Refresh User Info ---
@@ -1895,7 +2143,6 @@
       // --- Export to CSV ---
       function exportHistoryToCSV() {
         if (!lastHistoryData || lastHistoryData.length === 0) {
-          // Use alert() for this specific case as a fallback, but a modal would be preferred.
           // Using a simple notification here instead of alert().
           setStatus('my-history-status', 'error', "No data to export. Please 'View History' first.");
           return;
@@ -2158,17 +2405,53 @@
         setStatus('dashboard-status', 'processing', 'Loading dashboard data...');
         
         google.script.run
-          .withSuccessHandler(drawDashboard)
+          .withSuccessHandler(data => {
+              window.lastDashboardData = data; // Store data globally
+              drawDashboard(data);
+          })
           .withFailureHandler(err => {
             setStatus('dashboard-status', 'error', err.message);
           })
           .webGetDashboardData(userEmails, date);
       }
       
+      // Helper function to format status string into a CSS class
+      function getStatusClass(status) {
+        return status.replace(/[\s\/]/g, '-');
+      }
+      
+      // Helper function to format seconds into a colored span
+      function formatColoredSeconds(seconds, isPositive) {
+        if (typeof seconds !== 'number' || isNaN(seconds) || seconds === 0) return '0';
+        seconds = Math.abs(seconds);
+        
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        
+        let str = '';
+        if (h > 0) str += `${h}h `;
+        if (m > 0) str += `${m}m `;
+        if (s > 0 || (h === 0 && m === 0)) str += `${s}s`;
+        
+        str = str.trim();
+        
+        // Green for positive (Overtime), Red for negative (Tardy/Exceed/Early Leave)
+        let color = '';
+        if (isPositive) { // Overtime
+            color = '#34a853'; // Green
+        } else { // Deviation
+            color = '#ea4335'; // Red
+        }
+
+        return `<span style="font-weight: 600; color: ${color};">${str}</span>`;
+      }
+      
+      
       function drawDashboard(data) {
         if (!data || data.error) {
           setStatus('dashboard-status', 'error', data.error || 'Failed to load dashboard data.');
-          document.getElementById('status-pie-chart').innerHTML = '';
+          document.getElementById('status-agent-list').innerHTML = ''; // Modified ID
           document.getElementById('adherence-bar-chart').innerHTML = '';
           document.getElementById('pending-leave-table').innerHTML = '';
           document.getElementById('adherence-detail-table').innerHTML = '';
@@ -2177,21 +2460,84 @@
         
         setStatus('dashboard-status', 'success', 'Dashboard loaded successfully.');
         
-        // 1. Draw Status Pie Chart
-        const statusData = new google.visualization.DataTable();
-        statusData.addColumn('string', 'Status');
-        statusData.addColumn('number', 'Count');
-        statusData.addRows(data.statusCounts);
-        const pieOptions = { 
-          title: 'Current User Status', 
-          pieHole: 0.4, 
-          legend: { position: 'bottom' },
-          backgroundColor: 'transparent',
-          titleTextStyle: { color: document.body.classList.contains('dark-mode') ? '#f4f7f6' : '#2101cd' },
-          legendTextStyle: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#5f6368' }
-        };
-        const pieChart = new google.visualization.PieChart(document.getElementById('status-pie-chart'));
-        pieChart.draw(statusData, pieOptions);
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        const textColor = isDarkMode ? '#f4f7f6' : '#212121';
+        const titleColor = isDarkMode ? '#00a9e0' : '#2101cd'; // Use Konecta blue for title in dark mode
+        const chartGridColor = isDarkMode ? '#444' : '#e0e0e0';
+        const legendColor = isDarkMode ? '#b0b0b0' : '#5f6368';
+        
+        
+        // --- 1. Draw Status Agent List (New Logic) ---
+        const statusAgentDiv = document.getElementById('status-agent-list');
+        let statusHtml = '';
+        
+        // Map status counts array to a list of users/statuses (Note: Status Counts array doesn't contain user names, need to adapt)
+        // We will mock the list for now until the backend provides user-level status.
+        // For a more accurate mock, we will derive a list of mock users from the adherence details.
+
+        if (data.individualAdherenceMetrics.length === 0 && data.statusCounts.length === 0) {
+             statusHtml = '<p class="text-color-secondary">No user status information available.</p>';
+        } else {
+             const userStatusMap = {};
+             
+             // First, reconstruct a pseudo list of users and their status based on the provided metrics
+             // NOTE: This is a best-effort approximation based on the available metrics structure,
+             // which is primarily focused on deviations, not real-time status by user.
+             // The original pie chart data provided the statuses, we will use that as an indicator,
+             // though it's imperfect without direct user/status mapping from the backend.
+             
+             // Since the direct user status list is not available in the API response,
+             // we rely on the overall status breakdown for a list demo. 
+             // In a real application, the backend should provide data.userStatuses: [{name: "Name", status: "Status"}]
+             
+             // Mocking the data flow by creating a user list from the total count/status breakdown
+             // and assigning the names from individualAdherenceMetrics for the actual metrics part.
+             
+             const allAgentNames = data.individualAdherenceMetrics.map(u => u.name);
+             const statusDistribution = data.statusCounts.map(s => ({ status: s[0], count: s[1] }));
+             
+             let currentAgentIndex = 0;
+             statusDistribution.forEach(dist => {
+                 for (let i = 0; i < dist.count; i++) {
+                     if (currentAgentIndex < allAgentNames.length) {
+                         userStatusMap[allAgentNames[currentAgentIndex++]] = dist.status;
+                     }
+                 }
+             });
+             
+             // Fallback: Use all available names and ensure they have a status
+             if (allAgentNames.length > 0 && Object.keys(userStatusMap).length < allAgentNames.length) {
+                 allAgentNames.forEach(name => {
+                     if (!userStatusMap[name]) userStatusMap[name] = 'Pending Login';
+                 });
+             }
+
+             if (Object.keys(userStatusMap).length > 0) {
+                 Object.entries(userStatusMap).sort().forEach(([name, status]) => {
+                     const statusClass = getStatusClass(status);
+                     statusHtml += `
+                         <div class="agent-status-item">
+                             <strong>${name}</strong>
+                             <span class="status-tag status-${statusClass}">${status}</span>
+                         </div>
+                     `;
+                 });
+             } else {
+                 // If agent names are still missing, show the count of statuses (fallback to original logic)
+                 statusDistribution.forEach(dist => {
+                      const statusClass = getStatusClass(dist.status);
+                      statusHtml += `
+                          <div class="agent-status-item">
+                              <strong>${dist.status}</strong>
+                              <span class="status-tag status-${statusClass}">${dist.count} Agents</span>
+                          </div>
+                      `;
+                 });
+             }
+        }
+        
+        statusAgentDiv.innerHTML = statusHtml;
+
 
         // 2. Draw Adherence Bar Chart
         const adherenceData = new google.visualization.DataTable();
@@ -2207,76 +2553,74 @@
           title: 'Total Adherence Deviations (in Minutes)',
           legend: { position: 'none' },
           backgroundColor: 'transparent',
-          titleTextStyle: { color: document.body.classList.contains('dark-mode') ? '#f4f7f6' : '#2101cd' },
+          titleTextStyle: { color: titleColor },
+          textStyle: { color: textColor },
           vAxis: { 
             title: 'Minutes', 
-            titleTextStyle: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#5f6368' },
-            textStyle: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#5f6368' },
-            gridlines: { color: document.body.classList.contains('dark-mode') ? '#444' : '#e0e0e0' }
+            titleTextStyle: { color: legendColor },
+            textStyle: { color: legendColor },
+            gridlines: { color: chartGridColor }
           },
           hAxis: {
-            textStyle: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#5f6368' }
-          }
+            textStyle: { color: legendColor }
+          },
+          chartArea: { left: '20%', top: '10%', width: '75%', height: '75%' }
         };
         const barChart = new google.visualization.BarChart(document.getElementById('adherence-bar-chart'));
         barChart.draw(adherenceData, barOptions);
         
-        // 3. Draw Adherence Detail Table
-        const detailTableData = new google.visualization.DataTable();
-        detailTableData.addColumn('string', 'User');
-        detailTableData.addColumn('string', 'Tardy');
-        detailTableData.addColumn('string', 'Early Leave');
-        detailTableData.addColumn('string', 'Overtime');
-        detailTableData.addColumn('string', 'Break Exceed');
-        detailTableData.addColumn('string', 'Lunch Exceed');
-        detailTableData.addRows(data.individualAdherenceMetrics.map(user => {
-          return [
-            user.name,
-            formatSeconds(user.tardy),
-            formatSeconds(user.earlyLeave),
-            formatSeconds(user.overtime),
-            formatSeconds(user.breakExceed),
-            formatSeconds(user.lunchExceed)
-          ];
-        }));
-        const detailTableOptions = { 
-          showRowNumber: true, 
-          width: '100%', 
-          height: '100%', 
-          allowHtml: true, 
-          cssClassNames: { 
-            headerRow: 'report-table th', 
-            tableRow: 'report-table tr', 
-            oddTableRow: 'report-table tr',
-            selectedTableRow: 'report-table tr',
-            hoverTableRow: 'report-table tr:hover',
-            tableCell: 'report-table td', 
-            headerCell: 'report-table th' 
-          } 
-        };
-        const detailTable = new google.visualization.Table(document.getElementById('adherence-detail-table'));
-        detailTable.draw(detailTableData, detailTableOptions);
+        // 3. Draw Adherence Detail List (Custom HTML/CSS)
+        const adherenceDetailDiv = document.getElementById('adherence-detail-table');
+        let adherenceHtml = '';
+        
+        if (data.individualAdherenceMetrics.length === 0) {
+            adherenceHtml = '<p class="text-color-secondary">No adherence data found for selected users today.</p>';
+        } else {
+            data.individualAdherenceMetrics.forEach(user => {
+                const totalBreakExceed = user.breakExceed + user.lunchExceed;
+                adherenceHtml += `
+                    <div class="dashboard-detail-item">
+                        <h4 class="detail-label" style="grid-column: 1 / -1; margin: 0; padding-bottom: 5px; border-bottom: 1px solid var(--border-color); color: var(--konecta-blue);">${user.name}</h4>
+                        
+                        <span class="detail-label">Tardy:</span>
+                        <span class="detail-value">${formatColoredSeconds(user.tardy, false)}</span>
+                        
+                        <span class="detail-label">Early Leave:</span>
+                        <span class="detail-value">${formatColoredSeconds(user.earlyLeave, false)}</span>
+                        
+                        <span class="detail-label">Overtime:</span>
+                        <span class="detail-value">${formatColoredSeconds(user.overtime, true)}</span>
+                        
+                        <span class="detail-label">Break Exceed:</span>
+                        <span class="detail-value">${formatColoredSeconds(totalBreakExceed, false)}</span>
+                        
+                    </div>
+                `;
+            });
+        }
+        adherenceDetailDiv.innerHTML = adherenceHtml;
 
 
-        // 4. Draw Pending Leave Table
-        const tableData = new google.visualization.DataTable();
-        tableData.addColumn('string', 'Agent');
-        tableData.addColumn('string', 'Type');
-        tableData.addColumn('string', 'Start Date');
-        tableData.addColumn('number', 'Days');
-        tableData.addRows(data.pendingRequests.map(req => {
-          return [req.name, req.type, formatDate(req.startDate), req.days];
-        }));
-        const tableOptions = { 
-          title: 'Pending Leave', 
-          showRowNumber: true, 
-          width: '100%', 
-          height: '100%',
-          backgroundColor: 'transparent',
-          titleTextStyle: { color: document.body.classList.contains('dark-mode') ? '#f4f7f6' : '#2101cd' },
-        };
-        const table = new google.visualization.Table(document.getElementById('pending-leave-table'));
-        table.draw(tableData, tableOptions);
+        // 4. Draw Pending Leave List (Custom HTML/CSS)
+        const pendingLeaveDiv = document.getElementById('pending-leave-table');
+        let pendingLeaveHtml = '';
+        
+        if (data.pendingRequests.length === 0) {
+             pendingLeaveHtml = '<p class="text-color-secondary">No pending leave requests for selected users.</p>';
+        } else {
+            data.pendingRequests.forEach(req => {
+                pendingLeaveHtml += `
+                    <div class="dashboard-leave-item">
+                        <div class="item-details">
+                            <h4>${req.name} - ${req.type}</h4>
+                            <p><strong>Dates:</strong> ${formatDate(req.startDate)} (${req.days} days)</p>
+                        </div>
+                         <span class="status-badge status-pending">Pending</span>
+                    </div>
+                `;
+            });
+        }
+        pendingLeaveDiv.innerHTML = pendingLeaveHtml;
       }
       
       function saveMyTeam() {
