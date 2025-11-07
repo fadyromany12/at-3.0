@@ -323,7 +323,7 @@
         border-bottom: 3px solid var(--konecta-blue);
         background-color: var(--input-bg);
       }
-      #schedule-tab-button, #leave-approval-tab-button, #admin-tools-tab-button, #history-report-tab-button, #dashboard-tab-button, #my-schedule-tab-button, #reporting-line-tab-button {
+      #schedule-tab-button, #leave-approval-tab-button, #history-report-tab-button, #dashboard-tab-button, #my-schedule-tab-button, #reporting-line-tab-button {
         display: none;
       }
       
@@ -682,7 +682,7 @@
       }
       
       /* --- History Report & Dashboard Form Layouts --- */
-      #history-report-form, #dashboard-form {
+      #history-report-form {
         display: flex;
         flex-wrap: wrap; 
         gap: 15px;
@@ -692,13 +692,13 @@
         border-radius: var(--radius);
         padding: 20px;
       }
-      #history-report-form .form-group, #dashboard-form .form-group {
+      #history-report-form .form-group {
         flex: 1;
         min-width: 150px; 
         margin-bottom: 0;
       }
       
-      /* REMOVED: #history-user-select, #dashboard-user-select fixed heights */
+      /* REMOVED: #history-user-select fixed heights */
       
       #history-report-form button {
         width: auto;
@@ -722,6 +722,22 @@
         background-color: #3c4043;
       }
       
+      /* Dashboard Form Layout (MODIFIED) */
+      #dashboard-form {
+        display: flex;
+        flex-wrap: wrap; 
+        gap: 15px;
+        align-items: flex-end;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 20px;
+      }
+      #dashboard-form .form-group {
+        flex: 1;
+        min-width: 150px; 
+        margin-bottom: 0;
+      }
       #dashboard-filters {
         display: flex;
         flex-direction: column;
@@ -734,10 +750,10 @@
       }
       #dashboard-filters .load-btn { background-color: var(--konecta-dark); }
       #dashboard-filters .load-btn:hover { background-color: #1a0199; }
-      #dashboard-filters .team-btn { background-color: var(--konecta-blue); }
-      #dashboard-filters .team-btn:hover { background-color: #008fbc; }
-      #dashboard-filters .save-btn { background-color: #34a853; }
-      #dashboard-filters .save-btn:hover { background-color: #2c8c45; }
+      #dashboard-filters .team-btn { background-color: #34a853; } /* Green for loading team */
+      #dashboard-filters .team-btn:hover { background-color: #2c8c45; }
+      #dashboard-filters .save-btn { background-color: var(--konecta-blue); }
+      #dashboard-filters .save-btn:hover { background-color: #008fbc; }
       
       /* --- Report Tables --- */
       #history-report-display, #my-schedule-display {
@@ -931,7 +947,7 @@
         white-space: nowrap;
       }
 
-      /* --- NEW: Custom Multi-Select Styles --- */
+      /* --- NEW: Custom Multi-Select Styles (History only) --- */
       /* Apply to both dashboard and history containers */
       #dashboard-user-select-container, #history-user-select-container {
         position: relative; 
@@ -1030,6 +1046,100 @@
       }
       /* --- END Custom Multi-Select Styles --- */
 
+      /* --- NEW: Hierarchy Tree View Styles --- */
+      #dashboard-hierarchy-container {
+          flex: 2; /* Make it take more space than the date picker */
+          min-width: 300px;
+      }
+      #hierarchy-tree-view {
+          padding: 10px;
+          max-height: 300px; /* Constrain height */
+          overflow-y: auto;
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          background-color: var(--card-bg);
+      }
+
+      .tree-node {
+          padding: 8px 5px;
+          cursor: pointer;
+          user-select: none;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.95rem;
+          position: relative;
+          border-left: 3px solid transparent;
+          transition: all 0.2s ease;
+      }
+      .tree-node:hover {
+          background-color: var(--input-bg);
+          border-left-color: var(--konecta-blue);
+          border-radius: 4px;
+      }
+      .tree-node.selected {
+          background-color: var(--konecta-dark);
+          color: white;
+          font-weight: 600;
+          border-left-color: var(--konecta-yellow);
+      }
+      .tree-node.selected span, .tree-node.selected img {
+          filter: invert(1); 
+      }
+      /* Specific override for selected state text */
+      .tree-node.selected .tree-label {
+          color: white !important;
+      }
+      .tree-label {
+          flex-grow: 1;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+      }
+
+      .toggle-icon {
+          width: 14px;
+          height: 14px;
+          transition: transform 0.2s;
+          flex-shrink: 0;
+          opacity: 0.7;
+      }
+      .collapsed .toggle-icon {
+          transform: rotate(-90deg);
+      }
+      /* Hide toggle icon for nodes with no children */
+      .tree-node[data-has-children="false"] .toggle-icon {
+          visibility: hidden;
+      }
+
+      .subordinates-list {
+          margin-left: 15px;
+          padding-left: 5px;
+          border-left: 1px solid var(--border-color);
+          display: none; /* Hidden when collapsed */
+      }
+      
+      /* --- NEW: Role Circles/Icons --- */
+      .role-icon {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          border: 1px solid transparent;
+      }
+      .role-icon.agent {
+          background-color: var(--konecta-blue);
+      }
+      .role-icon.admin {
+          background-color: var(--konecta-yellow);
+          border-color: black;
+      }
+      .role-icon.superadmin {
+          background-color: var(--konecta-dark);
+      }
+      /* End NEW Role Circles/Icons */
+      /* --- END Hierarchy Tree View Styles --- */
+
       /* --- Responsive Design --- */
       @media (max-width: 900px) {
         /* Dashboard grid defaults to 1 column due to minmax(350px) but we explicitly set it for clarity */
@@ -1077,6 +1187,10 @@
         .dashboard-detail-item .detail-value {
            grid-column: span 1;
            text-align: left;
+        }
+        
+        #dashboard-hierarchy-container {
+             flex: none; /* Disable flex growth on mobile for simpler stacking */
         }
       }
     </style>
@@ -1310,25 +1424,24 @@
           <h2 id="dashboard-title">Team Dashboard</h2>
           <div id="dashboard-controls" class="form-container">
             <form id="dashboard-form">
-              <!-- MODIFIED: Replaced select with custom multiselect component -->
-              <div class="form-group" id="dashboard-user-select-container">
-                <label>Select Users</label>
-                <button type="button" id="custom-dashboard-select-button" class="custom-select-button" onclick="toggleUserDropdown('dashboard', event)">
-                  Select Users (0 selected)
-                </button>
-                <div id="custom-dashboard-select-dropdown" class="custom-select-dropdown" onclick="event.stopPropagation()">
-                  <!-- Options will be dynamically populated here -->
+              <!-- NEW: Hierarchy Selection -->
+              <div class="form-group" id="dashboard-hierarchy-container">
+                <label>Team Hierarchy (Click user to select)</label>
+                <div id="hierarchy-tree-view">
+                  <p class="text-color-secondary">Loading team structure...</p>
                 </div>
+                <small class="text-color-secondary">Selected: <strong id="selected-user-display">None</strong></small>
               </div>
               
               <div class="form-group">
                 <label for="dashboard-date">Select Date</label>
                 <input type="date" id="dashboard-date" required>
               </div>
+              
               <div id="dashboard-filters">
-                <button type="button" class="load-btn" onclick="loadDashboard()">Load Dashboard</button>
-                <button type="button" class="team-btn" onclick="loadMyTeam(false)">Load My Team</button>
-                <button type="button" class="save-btn" onclick="saveMyTeam()">Save as My Team</button>
+                <button type="button" class="load-btn" onclick="loadDashboard()">Load Dashboard for Selected User</button>
+                <button type="button" class="team-btn" onclick="loadMyFullHierarchy()">Load My Full Hierarchy</button>
+                <button type="button" class="save-btn" onclick="saveCurrentSelection()">Save Current Selection</button>
               </div>
             </form>
           </div>
@@ -1399,12 +1512,17 @@
       let lastHistoryData = null;
       let chartsLoaded = false; 
       
-      // NEW: Global state for the custom multiselects (Dashboard and History)
-      let selectedDashboardUsers = {}; // Key: email, Value: name
-      let dashboardUserList = []; // Copy of allUsersList for easy access
-      
+      // NEW: Global state for the custom multiselects (History only)
       let selectedHistoryUsers = {};
       let historyUserList = [];
+      
+      // NEW: Global state for Dashboard Hierarchy
+      let managerHierarchy = null; // Stores the full tree structure
+      let currentDashboardSelection = { 
+        emails: [], // The list of emails to query (flattened)
+        name: "None", // Name to display on the button/title
+        isFullHierarchy: false // Whether this selection includes nested reports
+      };
       
       // --- NEW/MODIFIED: Dark Mode Functions (Removed direct icon manipulation) ---
       const DARK_MODE_KEY = 'kap_dark_mode';
@@ -1524,9 +1642,11 @@
           }).getUserInfo();
         } else if (tabName === 'my-schedule') {
           loadMySchedule();
-        } else if (tabName === 'dashboard' && window.lastDashboardData) {
-            // Re-draw dashboard on tab switch if data exists to ensure current theme applies
-            drawDashboard(window.lastDashboardData);
+        } else if (tabName === 'dashboard') {
+            loadManagerHierarchy(); // NEW: Load hierarchy when dashboard is active
+            if (window.lastDashboardData) {
+                drawDashboard(window.lastDashboardData);
+            }
         }
       }
       
@@ -1551,7 +1671,8 @@
             } else if (activeTabName === 'my-schedule') {
               loadMySchedule();
             } else if (activeTabName === 'dashboard') {
-              loadDashboard();
+              loadManagerHierarchy(); // Reload hierarchy
+              loadDashboard(); // Reload dashboard data
             } else if (activeTabName === 'history-report' && lastHistoryData) {
               loadHistoryReport(); 
             }
@@ -1606,7 +1727,7 @@
           document.getElementById('admin-tools-tab-button').style.display = 'inline-block'; 
           document.getElementById('history-report-tab-button').style.display = 'inline-block'; 
           
-          // MODIFIED: Show custom select container instead of old select group
+          // Show custom select container for history
           document.getElementById('history-user-select-container').style.display = 'block'; 
           
           document.getElementById('reporting-line-tab-button').style.display = 'inline-block';
@@ -1617,13 +1738,14 @@
           populateAdminDropdown(allUsersList, selfUserName, 'manual-punch-user', 'Select a user'); 
           populateAdminDropdown(allUsersList, selfUserName, 'admin-leave-user', 'Select user to submit for'); 
           
-          // REMOVED: populateAdminDropdown for history-user-select
           populateAdminDropdown(allUsersList, selfUserName, 'balance-user-select', 'Select a user');
           
-          // NEW: Setup Custom Dashboard Select
-          populateAdminCustomSelect(allUsersList, selfUserName, 'dashboard');
-          
-          // NEW: Setup Custom History Select
+          // NEW: Load Hierarchy on info load for Dashboard if we are on the dashboard tab
+          if (document.getElementById('dashboard-panel').style.display === 'block') {
+             loadManagerHierarchy();
+          }
+
+          // Setup Custom History Select
           populateAdminCustomSelect(allUsersList, selfUserName, 'history');
           
           populateAdminDropdown(allUsersList, selfUserName, 'reporting-line-user', 'Select a user');
@@ -1640,7 +1762,7 @@
           // User is an agent
           document.getElementById('history-report-tab-button').style.display = 'inline-block'; 
           
-          // MODIFIED: Hide custom select container for agents
+          // Hide custom select container for agents
           document.getElementById('history-user-select-container').style.display = 'none'; 
         }
         
@@ -1664,40 +1786,6 @@
           .withSuccessHandler(user => { 
             clearTimeout(loadTimeout); 
             populateUserInfo(user);
-
-            if (user.role === 'admin' || user.role === 'superadmin') {
-              // Load saved team to pre-select dashboard dropdown
-              google.script.run.withSuccessHandler(teamEmails => {
-                if (teamEmails && teamEmails.length > 0) {
-                  // Manually set the initial state of the custom dashboard dropdown
-                  selectedDashboardUsers = {}; // Reset state before setting
-                  
-                  teamEmails.forEach(email => {
-                    const user = allUsersList.find(u => u.email === email);
-                    if (user) {
-                        selectedDashboardUsers[user.email] = user.name;
-                    }
-                  });
-                  // Apply selection state to the DOM elements
-                  const dropdownDiv = document.getElementById('custom-dashboard-select-dropdown');
-                  if (dropdownDiv) {
-                      dropdownDiv.querySelectorAll('.dropdown-item').forEach(item => {
-                          const email = item.getAttribute('data-email');
-                          const checkbox = item.querySelector('input[type="checkbox"]');
-                          if (selectedDashboardUsers[email]) {
-                              item.classList.add('selected');
-                              if (checkbox) checkbox.checked = true;
-                          } else {
-                             item.classList.remove('selected');
-                             if (checkbox) checkbox.checked = false;
-                          }
-                      });
-                  }
-                  // Update button display on load
-                  updateSelectButtonDisplay('dashboard');
-                }
-              }).webGetMyTeam(); 
-            }
           })
           .withFailureHandler(err => {
             clearTimeout(loadTimeout); 
@@ -1708,20 +1796,18 @@
         }).getUserInfo(); 
       }
       
-      // NEW: Function to handle populating custom multi-selects (Dashboard/History)
+      // NEW: Function to handle populating custom multi-selects (History)
       function populateAdminCustomSelect(users, selfName, type) { 
-          const isHistory = type === 'history';
-          const selectedState = isHistory ? selectedHistoryUsers : selectedDashboardUsers;
+          // Only used for history now
+          if (type !== 'history') return;
+          
+          const selectedState = selectedHistoryUsers;
           const dropdownDiv = document.getElementById(`custom-${type}-select-dropdown`);
           
           if (!dropdownDiv) return;
 
           // Set the global user list state for lookups
-          if (isHistory) {
-              historyUserList = users;
-          } else {
-              dashboardUserList = users;
-          }
+          historyUserList = users;
           
           // Reset DOM
           dropdownDiv.innerHTML = ''; 
@@ -1754,7 +1840,7 @@
       // MODIFIED: Original function now skips custom select IDs
       function populateAdminDropdown(users, selfName, dropdownId, selfText) { 
         // Skip custom selects handled by populateAdminCustomSelect
-        if (dropdownId.includes('dashboard-user-select') || dropdownId.includes('history-user-select')) {
+        if (dropdownId.includes('history-user-select')) {
              return;
         }
 
@@ -2581,21 +2667,19 @@
 
       // --- Dashboard Functions ---
       
-      // NEW: Generalized function to get selected users based on type
+      // History Select Functions (Kept for History Report only)
       function getSelectedUsers(type) {
-        const selectedState = type === 'history' ? selectedHistoryUsers : selectedDashboardUsers;
-        const userEmails = Object.keys(selectedState);
-        
+        if (type !== 'history') return [];
+        const userEmails = Object.keys(selectedHistoryUsers);
         if (userEmails.length === 0) {
-          // If nothing is explicitly selected, the logic defaults to 'ALL_USERS' in the backend
           return ['ALL_USERS'];
         }
         return userEmails;
       }
       
-      // MODIFIED: Accepts a 'type' parameter
       function toggleUserDropdown(type, event) {
           event.stopPropagation();
+          if (type !== 'history') return;
           const dropdown = document.getElementById(`custom-${type}-select-dropdown`);
           const button = document.getElementById(`custom-${type}-select-button`);
           const isVisible = dropdown.style.display === 'block';
@@ -2604,41 +2688,29 @@
               dropdown.style.display = 'none';
               button.classList.remove('active');
           } else {
-              // Hide all other dropdowns
               document.querySelectorAll('.custom-select-dropdown').forEach(d => d.style.display = 'none');
               document.querySelectorAll('.custom-select-button').forEach(b => b.classList.remove('active'));
-              
-              // Show this one
               dropdown.style.display = 'block';
               button.classList.add('active');
               
-              // Ensure "Select All" checkbox reflects current state
-              const isHistory = type === 'history';
-              const userListState = isHistory ? historyUserList : dashboardUserList;
-              const selectedState = isHistory ? selectedHistoryUsers : selectedDashboardUsers;
-              
-              const allChecked = Object.keys(selectedState).length === userListState.length && userListState.length > 0;
+              const allChecked = Object.keys(selectedHistoryUsers).length === historyUserList.length && historyUserList.length > 0;
               const selectAllCheckbox = document.getElementById(`select-all-checkbox-${type}`);
               if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
           }
       }
 
-      // MODIFIED: Accepts a 'type' parameter
       function selectUserItem(type, event, itemElement, userEmail, userName) {
           event.stopPropagation();
+          if (type !== 'history') return;
           const checkbox = itemElement.querySelector(`input[data-email="${userEmail}"]`);
           
-          // Check if the click target was the checkbox/label
           if (event.target !== checkbox && event.target.tagName !== 'LABEL') {
-               // If clicking the background, manually toggle the checkbox state
               checkbox.checked = !checkbox.checked;
           }
           
           const finalCheckedState = checkbox.checked;
-          const isHistory = type === 'history';
-          const selectedState = isHistory ? selectedHistoryUsers : selectedDashboardUsers;
-          const userListState = isHistory ? historyUserList : dashboardUserList;
-
+          const selectedState = selectedHistoryUsers;
+          
           if (finalCheckedState) {
               selectedState[userEmail] = userName;
               itemElement.classList.add('selected');
@@ -2647,8 +2719,7 @@
               itemElement.classList.remove('selected');
           }
           
-          // Update the "Select All" checkbox state
-          const allChecked = Object.keys(selectedState).length === userListState.length && userListState.length > 0;
+          const allChecked = Object.keys(selectedState).length === historyUserList.length && historyUserList.length > 0;
           const selectAllCheckbox = document.getElementById(`select-all-checkbox-${type}`);
           if (selectAllCheckbox) {
               selectAllCheckbox.checked = allChecked;
@@ -2657,31 +2728,23 @@
           updateSelectButtonDisplay(type);
       }
 
-      // MODIFIED: Accepts a 'type' parameter
       function toggleSelectAll(type) {
+          if (type !== 'history') return;
           const selectAllChecked = document.getElementById(`select-all-checkbox-${type}`).checked;
           const dropdown = document.getElementById(`custom-${type}-select-dropdown`);
-          const isHistory = type === 'history';
-          const selectedState = isHistory ? selectedHistoryUsers : selectedDashboardUsers;
-          const userListState = isHistory ? historyUserList : dashboardUserList;
           
-          // Clear current state
-          Object.keys(selectedState).forEach(key => delete selectedState[key]);
+          Object.keys(selectedHistoryUsers).forEach(key => delete selectedHistoryUsers[key]);
           
           if (selectAllChecked) {
-              // Populate state
-              userListState.forEach(user => {
-                  selectedState[user.email] = user.name;
+              allUsersList.forEach(user => {
+                  selectedHistoryUsers[user.email] = user.name;
               });
-              // Update UI
               dropdown.querySelectorAll('.dropdown-item').forEach(item => {
                   item.classList.add('selected');
                   const checkbox = item.querySelector('input[type="checkbox"]');
-                  // Do not toggle the 'select all' checkbox itself
                   if (checkbox && checkbox.id !== `select-all-checkbox-${type}`) checkbox.checked = true; 
               });
           } else {
-              // Update UI
               dropdown.querySelectorAll('.dropdown-item').forEach(item => {
                   item.classList.remove('selected');
                   const checkbox = item.querySelector('input[type="checkbox"]');
@@ -2691,20 +2754,16 @@
           updateSelectButtonDisplay(type);
       }
 
-      // MODIFIED: Accepts a 'type' parameter
       function updateSelectButtonDisplay(type) {
+          if (type !== 'history') return;
           const button = document.getElementById(`custom-${type}-select-button`);
           if (!button) return;
           
-          const isHistory = type === 'history';
-          const selectedState = isHistory ? selectedHistoryUsers : selectedDashboardUsers;
-          const userListState = isHistory ? historyUserList : dashboardUserList;
-          
-          const count = Object.keys(selectedState).length;
+          const count = Object.keys(selectedHistoryUsers).length;
           
           if (count === 0) {
               button.textContent = 'Select Users (0 selected)';
-          } else if (count === userListState.length && userListState.length > 0) {
+          } else if (count === historyUserList.length && historyUserList.length > 0) {
               button.textContent = `All Users Selected (${count})`;
           } else {
               button.textContent = `Selected: ${count} user(s)`;
@@ -2713,19 +2772,7 @@
       
       // Close dropdown when clicking outside
       document.addEventListener('click', function(event) {
-          
-          // --- Dashboard Logic ---
-          const dashboardDropdown = document.getElementById('custom-dashboard-select-dropdown');
-          const dashboardButton = document.getElementById('custom-dashboard-select-button');
-          if (dashboardDropdown && dashboardButton && dashboardDropdown.style.display === 'block') {
-              const container = document.getElementById('dashboard-user-select-container');
-              if (container && !container.contains(event.target)) {
-                  dashboardDropdown.style.display = 'none';
-                  dashboardButton.classList.remove('active');
-              }
-          }
-          
-          // --- History Logic (New) ---
+          // --- History Logic ---
           const historyDropdown = document.getElementById('custom-history-select-dropdown');
           const historyButton = document.getElementById('custom-history-select-button');
           if (historyDropdown && historyButton && historyDropdown.style.display === 'block') {
@@ -2738,80 +2785,288 @@
       });
 
 
+      // --- NEW HIERARCHY FUNCTIONS ---
+      
+      // Recursive function to flatten hierarchy into a list of emails
+      function flattenHierarchy(node, list = []) {
+          if (!node || !node.email) return list;
+          list.push(node.email);
+          node.subordinates.forEach(sub => flattenHierarchy(sub, list));
+          return list;
+      }
+      
+      // Function to get the current user's full hierarchy
+      function loadMyFullHierarchy() {
+          const managerEmail = allUsersList.find(u => u.name === selfUserName)?.email;
+          if (!managerEmail) {
+              setStatus('dashboard-status', 'error', "Could not find your user email.");
+              return;
+          }
+          
+          setStatus('dashboard-status', 'processing', 'Loading full subordinate team list...');
+
+          // This fetches the flattened list of all direct and indirect reports
+          google.script.run
+            .withSuccessHandler(emails => {
+                if (emails.error) {
+                    setStatus('dashboard-status', 'error', emails.error);
+                    return;
+                }
+                
+                const managerName = allUsersList.find(u => u.email === managerEmail)?.name || 'Manager';
+                
+                currentDashboardSelection = {
+                    emails: emails,
+                    name: `${managerName}'s Full Hierarchy`,
+                    isFullHierarchy: true
+                };
+                
+                // Also update the selection display to reflect the full team
+                document.getElementById('selected-user-display').textContent = currentDashboardSelection.name;
+                
+                // Deselect any node in the tree
+                document.querySelectorAll('#hierarchy-tree-view .tree-node').forEach(node => {
+                    node.classList.remove('selected');
+                });
+                
+                setStatus('dashboard-status', 'success', `Set dashboard selection to: ${currentDashboardSelection.name}`);
+                loadDashboard();
+            })
+            .withFailureHandler(err => {
+                setStatus('dashboard-status', 'error', `Failed to load full hierarchy: ${err.message}`);
+            })
+            .webGetAllSubordinateEmails(managerEmail);
+      }
+      
+      // Function to load the hierarchy tree from the server
+      function loadManagerHierarchy() {
+          const treeView = document.getElementById('hierarchy-tree-view');
+          if (selfRole === 'agent') {
+              treeView.innerHTML = `<p class="text-color-secondary">Hierarchy view available only to managers.</p>`;
+              return;
+          }
+          treeView.innerHTML = `<p class="text-color-secondary">Fetching team hierarchy...</p>`;
+
+          google.script.run
+              .withSuccessHandler(hierarchyData => {
+                  if (hierarchyData.error) {
+                      treeView.innerHTML = `<p class="status-message error visible">${hierarchyData.error}</p>`;
+                      return;
+                  }
+                  managerHierarchy = hierarchyData;
+                  renderHierarchyTree(hierarchyData, treeView);
+                  
+                  // Default selection: The manager's own node, loaded as a single user.
+                  currentDashboardSelection.emails = [hierarchyData.email];
+                  currentDashboardSelection.name = hierarchyData.name;
+                  currentDashboardSelection.isFullHierarchy = false;
+                  
+                  document.getElementById('selected-user-display').textContent = hierarchyData.name;
+                  
+                  // Auto-select the root node (the manager)
+                  const rootNode = document.querySelector(`#hierarchy-tree-view [data-email="${hierarchyData.email}"]`);
+                  if (rootNode) {
+                       rootNode.classList.add('selected');
+                  }
+                  
+              })
+              .withFailureHandler(err => {
+                  treeView.innerHTML = `<p class="status-message error visible">Error loading hierarchy: ${err.message}</p>`;
+              })
+              .webGetManagerHierarchy();
+      }
+      
+      // Recursive function to render the hierarchy
+      function renderHierarchyTree(node, containerElement) {
+          if (!node || !node.name) return;
+
+          const isManager = node.role !== 'agent';
+          const hasChildren = node.subordinates && node.subordinates.length > 0;
+          const isRoot = node.depth === 0;
+          
+          // Get the role circle class
+          const roleClass = node.role || 'agent';
+
+          // 1. Create the container element for this node
+          const nodeContainer = document.createElement('div');
+          
+          // 2. Create the clickable tree node element
+          const nodeDiv = document.createElement('div');
+          nodeDiv.className = `tree-node ${isManager ? 'collapsed' : ''}`;
+          nodeDiv.setAttribute('data-email', node.email);
+          nodeDiv.setAttribute('data-role', node.role);
+          nodeDiv.setAttribute('data-has-children', hasChildren);
+          nodeDiv.onclick = (e) => handleNodeClick(e, node);
+
+          // Build the content of the node (REPLACED IMAGE TAGS WITH DIVS)
+          nodeDiv.innerHTML = `
+              <img src="https://icons.veryicon.com/png/o/miscellaneous/cloud-services/arrow-right-13.png" class="toggle-icon" alt="Toggle">
+              <span class="tree-label">
+                  <div class="role-icon ${roleClass}"></div>
+                  ${node.name}
+                  ${isManager && !isRoot ? ` <span class="text-color-secondary">(${node.subordinates.length} reports)</span>` : ''}
+              </span>
+          `;
+          
+          nodeContainer.appendChild(nodeDiv);
+
+          // 3. Create the subordinates list container
+          if (hasChildren) {
+              const subList = document.createElement('div');
+              subList.className = 'subordinates-list';
+              subList.id = `subordinates-${node.email.replace(/[.@]/g, '-')}`;
+
+              // Recursively render children
+              node.subordinates.forEach(sub => {
+                  renderHierarchyTree(sub, subList);
+              });
+              
+              nodeContainer.appendChild(subList);
+          }
+          
+          containerElement.appendChild(nodeContainer);
+      }
+      
+      // Handles click on any node in the tree
+      function handleNodeClick(e, node) {
+          e.stopPropagation();
+          const nodeDiv = e.currentTarget;
+          const isManager = node.role !== 'agent';
+          const hasChildren = nodeDiv.getAttribute('data-has-children') === 'true';
+          
+          // 1. Handle Selection (always select the clicked user)
+          document.querySelectorAll('#hierarchy-tree-view .tree-node').forEach(n => {
+              n.classList.remove('selected');
+          });
+          nodeDiv.classList.add('selected');
+          
+          // Set selection state
+          currentDashboardSelection.emails = [node.email]; // Default to single user
+          currentDashboardSelection.name = node.name;
+          currentDashboardSelection.isFullHierarchy = isManager && hasChildren;
+          
+          document.getElementById('selected-user-display').textContent = node.name;
+          
+          // 2. Handle Collapse/Expand for managers
+          if (isManager && hasChildren) {
+              const subList = document.getElementById(`subordinates-${node.email.replace(/[.@]/g, '-')}`);
+              if (subList) {
+                  const isCollapsed = nodeDiv.classList.contains('collapsed');
+                  nodeDiv.classList.toggle('collapsed');
+                  subList.style.display = isCollapsed ? 'block' : 'none';
+              }
+          }
+      }
+      
+      // Reworked loadDashboard to use the new selection state
       function loadDashboard() {
         if (!chartsLoaded) {
           google.charts.setOnLoadCallback(loadDashboard);
           return;
         }
-        const userEmails = getSelectedUsers('dashboard'); // MODIFIED
-        const date = document.getElementById('dashboard-date').value;
         
+        const date = document.getElementById('dashboard-date').value;
         if (!date) {
            setStatus('dashboard-status', 'error', 'Please select a date for the dashboard.');
            return;
         }
         
-        if (userEmails.length === 1 && userEmails[0] === 'ALL_USERS') {
-           document.getElementById('dashboard-title').innerText = `Full Team Dashboard for ${formatDate(date)}`;
-        } else {
-           // Use the actual number of selected users
-           const selectedCount = Object.keys(selectedDashboardUsers).length || userEmails.length;
-           document.getElementById('dashboard-title').innerText = `Dashboard for ${selectedCount} User(s) (${formatDate(date)})`;
-        }
+        // Final user list to send to the backend
+        let userEmailsToQuery = [];
+        let dashboardTitle = `Dashboard for ${formatDate(date)}`;
         
-        setStatus('dashboard-status', 'processing', 'Loading dashboard data...');
-        
-        google.script.run
-          .withSuccessHandler(data => {
-              window.lastDashboardData = data; // Store data globally
-              drawDashboard(data);
-          })
-          .withFailureHandler(err => {
-            setStatus('dashboard-status', 'error', err.message);
-          })
-          .webGetDashboardData(userEmails, date);
-      }
-      
-      // Helper function to format status string into a CSS class
-      function getStatusClass(status) {
-        return status.replace(/[\s\/]/g, '-');
-      }
-      
-      // Helper function to format seconds into a colored span
-      function formatColoredSeconds(seconds, isPositive) {
-        if (typeof seconds !== 'number' || isNaN(seconds) || seconds === 0) return '0';
-        seconds = Math.abs(seconds);
-        
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
-        
-        let str = '';
-        if (h > 0) str += `${h}h `;
-        if (m > 0) str += `${m}m `;
-        if (s > 0 || (h === 0 && m === 0)) str += `${s}s`;
-        
-        str = str.trim();
-        
-        // Green for positive (Overtime), Red for negative (Tardy/Exceed/Early Leave)
-        let color = '';
-        if (isPositive) { // Overtime
-            color = '#34a853'; // Green
-        } else { // Deviation
-            color = '#ea4335'; // Red
-        }
+        if (currentDashboardSelection.isFullHierarchy) {
+            // Load Full Hierarchy was explicitly requested or a manager node was clicked
+            
+            // If the manager node was clicked (isFullHierarchy is true, but emails has only 1), 
+            // we must fetch the full list of reports for that single manager.
+            if (currentDashboardSelection.emails.length === 1 && currentDashboardSelection.name !== "None") {
+                 setStatus('dashboard-status', 'processing', `Loading full subordinate team for ${currentDashboardSelection.name}...`);
+                 
+                 // Synchronous call (Apps Script handles the full list generation)
+                 google.script.run
+                    .withSuccessHandler(emails => {
+                         // Update the selection state with the flattened list
+                        currentDashboardSelection.emails = emails;
+                        
+                        dashboardTitle = `Hierarchy for ${currentDashboardSelection.name} (${emails.length} users)`;
+                        document.getElementById('dashboard-title').innerText = dashboardTitle;
+                        
+                        // Proceed to fetch dashboard data with the new list
+                        fetchDashboardData(emails, date, dashboardTitle);
+                    })
+                    .withFailureHandler(err => {
+                        setStatus('dashboard-status', 'error', `Failed to load hierarchy list: ${err.message}`);
+                    })
+                    .webGetAllSubordinateEmails(currentDashboardSelection.emails[0]); // Send the manager's email
+                return; // Wait for async call to finish
+            } else {
+                 // Full hierarchy list was already loaded via 'Load My Full Hierarchy' button
+                 userEmailsToQuery = currentDashboardSelection.emails;
+                 dashboardTitle = currentDashboardSelection.name;
+            }
 
-        return `<span style="font-weight: 600; color: ${color};">${str}</span>`;
+        } else {
+            // Single User or Saved Selection was used
+            userEmailsToQuery = currentDashboardSelection.emails;
+            dashboardTitle = `Dashboard for ${currentDashboardSelection.name} (${userEmailsToQuery.length} users)`;
+        }
+        
+        if (userEmailsToQuery.length === 0) {
+             setStatus('dashboard-status', 'error', 'Please select a user or load a team from the hierarchy.');
+             return;
+        }
+        
+        document.getElementById('dashboard-title').innerText = dashboardTitle;
+        fetchDashboardData(userEmailsToQuery, date, dashboardTitle);
       }
       
+      function fetchDashboardData(userEmails, date, dashboardTitle) {
+          setStatus('dashboard-status', 'processing', `Loading data for ${userEmails.length} user(s) on ${formatDate(date)}...`);
+          
+          google.script.run
+            .withSuccessHandler(data => {
+                window.lastDashboardData = data; 
+                drawDashboard(data);
+            })
+            .withFailureHandler(err => {
+              setStatus('dashboard-status', 'error', err.message);
+            })
+            .webGetDashboardData(userEmails, date);
+      }
+      
+      // Function to save the current selection (single user or team list)
+      function saveCurrentSelection() {
+          if (currentDashboardSelection.emails.length === 0) {
+              setStatus('dashboard-status', 'error', 'No user(s) currently selected to save.');
+              return;
+          }
+          
+          setStatus('dashboard-status', 'processing', 'Saving current selection as "My Team"...');
+          
+          google.script.run
+            .withSuccessHandler(msg => {
+              setStatus('dashboard-status', 'success', msg);
+            })
+            .withFailureHandler(err => {
+              setStatus('dashboard-status', 'error', err.message);
+            })
+            .webSaveMyTeam(currentDashboardSelection.emails);
+      }
+      
+      // Function to get the current list of emails from the selection state
+      function getDashboardEmailsForSave() {
+          // This function is now deprecated in favor of using the global state in saveCurrentSelection
+          return currentDashboardSelection.emails;
+      }
       
       function drawDashboard(data) {
+        // Explicitly check for data existence and validity for each section
         if (!data || data.error) {
           setStatus('dashboard-status', 'error', data.error || 'Failed to load dashboard data.');
-          document.getElementById('status-agent-list').innerHTML = ''; // Modified ID
-          // document.getElementById('adherence-bar-chart').innerHTML = ''; // Removed element
-          document.getElementById('pending-leave-table').innerHTML = '';
-          document.getElementById('adherence-detail-table').innerHTML = '';
+          document.getElementById('status-agent-list').innerHTML = '<p class="text-color-secondary">Error loading data.</p>'; 
+          document.getElementById('pending-leave-table').innerHTML = '<p class="text-color-secondary">Error loading data.</p>';
+          document.getElementById('adherence-detail-table').innerHTML = '<p class="text-color-secondary">Error loading data.</p>';
           return;
         }
         
@@ -2824,79 +3079,46 @@
         const legendColor = isDarkMode ? '#b0b0b0' : '#5f6368';
         
         
-        // --- 1. Draw Status Agent List (New Logic) ---
+        // --- 1. Draw Status Agent List ---
         const statusAgentDiv = document.getElementById('status-agent-list');
         let statusHtml = '';
         
-        if (data.individualAdherenceMetrics.length === 0 && data.statusCounts.length === 0) {
-             statusHtml = '<p class="text-color-secondary">No user status information available.</p>';
+        if (!data.statusCounts || data.statusCounts.length === 0) {
+             statusHtml = '<p class="text-color-secondary">No user status information available for this date/team.</p>';
         } else {
-             const userStatusMap = {};
-             
-             // First, reconstruct a pseudo list of users and their status based on the provided metrics
-             // NOTE: This is a best-effort approximation based on the available metrics structure,
-             // which is primarily focused on deviations, not real-time status by user.
-             // The original pie chart data provided the statuses, we will use that as an indicator,
-             // though it's imperfect without direct user/status mapping from the backend.
-             
-             const allAgentNames = data.individualAdherenceMetrics.map(u => u.name);
              const statusDistribution = data.statusCounts.map(s => ({ status: s[0], count: s[1] }));
              
-             let currentAgentIndex = 0;
              statusDistribution.forEach(dist => {
-                 for (let i = 0; i < dist.count; i++) {
-                     if (currentAgentIndex < allAgentNames.length) {
-                         userStatusMap[allAgentNames[currentAgentIndex++]] = dist.status;
-                     }
-                 }
-             });
-             
-             // Fallback: Use all available names and ensure they have a status
-             if (allAgentNames.length > 0 && Object.keys(userStatusMap).length < allAgentNames.length) {
-                 allAgentNames.forEach(name => {
-                     if (!userStatusMap[name]) userStatusMap[name] = 'Pending Login';
-                 });
-             }
-
-             if (Object.keys(userStatusMap).length > 0) {
-                 Object.entries(userStatusMap).sort().forEach(([name, status]) => {
-                     const statusClass = getStatusClass(status);
-                     statusHtml += `
-                         <div class="agent-status-item">
-                             <strong>${name}</strong>
-                             <span class="status-tag status-${statusClass}">${status}</span>
-                         </div>
-                     `;
-                 });
-             } else {
-                 // If agent names are still missing, show the count of statuses (fallback to original logic)
-                 statusDistribution.forEach(dist => {
+                  if (dist.count > 0) {
                       const statusClass = getStatusClass(dist.status);
                       statusHtml += `
                           <div class="agent-status-item">
                               <strong>${dist.status}</strong>
-                              <span class="status-tag status-${statusClass}">${dist.count} Agents</span>
+                              <span class="status-tag status-${statusClass}">${dist.count} Agent(s)</span>
                           </div>
                       `;
-                 });
-             }
+                  }
+             });
         }
-        
         statusAgentDiv.innerHTML = statusHtml;
 
 
-        // 2. Draw Adherence Bar Chart
-        // REMOVED LOGIC: Bar chart is removed as per user request.
-        
-        // 3. Draw Adherence Detail List (Custom HTML/CSS)
+        // --- 2. Draw Adherence Detail List ---
         const adherenceDetailDiv = document.getElementById('adherence-detail-table');
         let adherenceHtml = '';
         
-        if (data.individualAdherenceMetrics.length === 0) {
-            adherenceHtml = '<p class="text-color-secondary">No adherence data found for selected users today.</p>';
+        if (!data.individualAdherenceMetrics || data.individualAdherenceMetrics.length === 0) {
+            adherenceHtml = '<p class="text-color-secondary">No adherence data found for selected users today (No logins recorded).</p>';
         } else {
+            // Sort by Tardy/Early Leave (worst offenders first)
+            data.individualAdherenceMetrics.sort((a, b) => {
+                 const aDeviation = a.tardy + a.earlyLeave + a.breakExceed + a.lunchExceed;
+                 const bDeviation = b.tardy + b.earlyLeave + b.breakExceed + b.lunchExceed;
+                 return bDeviation - aDeviation; // Descending order
+            });
+            
             data.individualAdherenceMetrics.forEach(user => {
-                const totalBreakExceed = user.breakExceed + user.lunchExceed;
+                const totalBreakExceed = (parseInt(user.breakExceed, 10) || 0) + (parseInt(user.lunchExceed, 10) || 0);
                 adherenceHtml += `
                     <div class="dashboard-detail-item">
                         <h4 class="detail-label" style="grid-column: 1 / -1; margin: 0; padding-bottom: 5px; border-bottom: 1px solid var(--border-color); color: var(--konecta-blue);">${user.name}</h4>
@@ -2920,11 +3142,11 @@
         adherenceDetailDiv.innerHTML = adherenceHtml;
 
 
-        // 4. Draw Pending Leave List (Custom HTML/CSS)
+        // --- 3. Draw Pending Leave List ---
         const pendingLeaveDiv = document.getElementById('pending-leave-table');
         let pendingLeaveHtml = '';
         
-        if (data.pendingRequests.length === 0) {
+        if (!data.pendingRequests || data.pendingRequests.length === 0) {
              pendingLeaveHtml = '<p class="text-color-secondary">No pending leave requests for selected users.</p>';
         } else {
             data.pendingRequests.forEach(req => {
@@ -2942,15 +3164,16 @@
         pendingLeaveDiv.innerHTML = pendingLeaveHtml;
       }
       
+      // Function to get the current list of emails from the selection state
       function saveMyTeam() {
-        const selectedUsers = getSelectedUsers('dashboard');
+        const selectedUsers = currentDashboardSelection.emails;
         
-        if (selectedUsers.length === 1 && selectedUsers[0] === 'ALL_USERS') {
+        if (selectedUsers.length === 0) {
           setStatus('dashboard-status', 'error', 'No specific users selected to save as your team.');
           return;
         }
         
-        setStatus('dashboard-status', 'processing', 'Saving "My Team"...');
+        setStatus('dashboard-status', 'processing', 'Saving current selection as "My Team"...');
         
         google.script.run
           .withSuccessHandler(msg => {
@@ -2967,47 +3190,39 @@
         
         google.script.run
           .withSuccessHandler(teamEmails => {
-            const dropdown = document.getElementById('custom-dashboard-select-dropdown');
             
-            // Reset state
-            selectedDashboardUsers = {};
-            const allItems = dropdown.querySelectorAll('.dropdown-item:not(:first-child)');
-            
-            allItems.forEach(item => {
-                item.classList.remove('selected');
-                const checkbox = item.querySelector('input[type="checkbox"]');
-                if (checkbox) checkbox.checked = false;
+            // Deselect all nodes in the tree
+            document.querySelectorAll('#hierarchy-tree-view .tree-node').forEach(node => {
+                node.classList.remove('selected');
             });
 
             if (teamEmails && teamEmails.length > 0) {
-              // Re-select based on saved teamEmails
-              teamEmails.forEach(email => {
-                  const item = dropdown.querySelector(`div[data-email="${email}"]`);
-                  if (item) {
-                      item.classList.add('selected');
-                      const checkbox = item.querySelector('input[type="checkbox"]');
-                      if (checkbox) checkbox.checked = true;
-                      
-                      // Re-populate global state
-                      const user = dashboardUserList.find(u => u.email === email);
-                      if (user) {
-                          selectedDashboardUsers[user.email] = user.name;
-                      }
-                  }
-              });
-              updateSelectButtonDisplay('dashboard');
-              setStatus('dashboard-status', 'success', 'Loaded "My Team". Click "Load Dashboard" to view.');
+                const teamNames = teamEmails.map(email => {
+                    const user = allUsersList.find(u => u.email === email);
+                    return user ? user.name : null;
+                }).filter(name => name);
+                
+                // Select the first node that is part of the saved team, just for visual feedback
+                if(teamEmails[0]) {
+                     const firstNode = document.querySelector(`#hierarchy-tree-view [data-email="${teamEmails[0]}"]`);
+                     if (firstNode) firstNode.classList.add('selected');
+                }
+                
+                currentDashboardSelection = {
+                    emails: teamEmails,
+                    name: `Saved Team (${teamEmails.length} users)`,
+                    isFullHierarchy: false // Saved team is just a static list
+                };
+                
+                document.getElementById('selected-user-display').textContent = currentDashboardSelection.name;
+                setStatus('dashboard-status', 'success', 'Loaded "My Team". Click "Load Dashboard" to view.');
             } else {
-              updateSelectButtonDisplay('dashboard');
-              setStatus('dashboard-status', 'success', 'No "My Team" saved. Select users and click "Load Dashboard".');
+                 currentDashboardSelection = { emails: [], name: "None", isFullHierarchy: false };
+                 document.getElementById('selected-user-display').textContent = 'None';
+                 setStatus('dashboard-status', 'success', 'No "My Team" saved. Select a user/team and click "Load Dashboard".');
             }
             
-            // Ensure "Select All" reflects the new selection
-            const allChecked = Object.keys(selectedDashboardUsers).length === dashboardUserList.length && dashboardUserList.length > 0;
-            const selectAllCheckbox = document.getElementById(`select-all-checkbox-dashboard`);
-            if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
-
-            if (!autoLoadDashboard) {
+            if (autoLoadDashboard) {
               loadDashboard();
             }
           })
