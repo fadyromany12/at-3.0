@@ -6,7 +6,8 @@ const SHEET_NAMES = {
   schedule: "Schedules",
   logs: "Logs",
   otherCodes: "Other Codes",
-  leaveRequests: "Leave Requests" 
+  leaveRequests: "Leave Requests", 
+  coaching: "Coaching"
 };
 // --- Break Time Configuration (in seconds) ---
 const PLANNED_BREAK_SECONDS = 15 * 60; // 15 minutes
@@ -15,14 +16,13 @@ const PLANNED_LUNCH_SECONDS = 30 * 60; // 30 minutes
 // --- Shift Cutoff Hour (e.g., 7 = 7 AM) ---
 const SHIFT_CUTOFF_HOUR = 7; 
 
-
 // ================= WEB APP ENTRY =================
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('index')
-    .setTitle('Konecta Adherence Portal (KAP)')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  return HtmlService.createTemplateFromFile('index') // <-- 1. Change this
+    .evaluate() // <-- 2. Add this
+    .setTitle('Konecta Adherence Portal (KAP)')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
-
 // ================= WEB APP APIs (UPDATED) =================
 
 // === Web App API for Punching ===
@@ -164,7 +164,121 @@ function webUpdateReportingLine(userEmail, newSupervisorEmail) {
     return "Error: " + err.message;
   }
 }
+// === NEW: Web App API for Coaching ===
 
+/**
+ * Saves a new or updated coaching session.
+ */
+function webSubmitCoaching(sessionObject) {
+  try {
+    const adminEmail = Session.getActiveUser().getEmail().toLowerCase();
+    const ss = getSpreadsheet();
+    const sheet = getOrCreateSheet(ss, SHEET_NAMES.coaching);
+    
+    // Simple validation
+    if (!sessionObject.agentEmail || !sessionObject.sessionDate || !sessionObject.coachingTopic) {
+      throw new Error("Agent, Session Date, and Topic are required.");
+    }
+
+    const sessionDate = new Date(sessionObject.sessionDate + 'T00:00:00');
+    const nextReviewDate = sessionObject.nextReviewDate ? new Date(sessionObject.nextReviewDate + 'T00:00:00') : "";
+    
+    // In a real app, you would check for an existing SessionID to update it.
+    // For now, we will just append new sessions.
+    const sessionID = `coach_${new Date().getTime()}`;
+    
+    sheet.appendRow([
+      sessionID,
+      sessionObject.progressStatus || "Planned",
+      sessionObject.agentEmail,
+      sessionObject.agentName,
+      sessionObject.coachEmail,
+      sessionObject.coachName,
+      sessionObject.weekNumber,
+      sessionDate,
+      sessionObject.areaOfConcern,
+      sessionObject.rootCause,
+      sessionObject.coachingTopic,
+      sessionObject.actionsTaken,
+      sessionObject.agentFeedback,
+      sessionObject.followUpPlan,
+      nextReviewDate,
+      sessionObject.qaInteractionID || "",
+      sessionObject.qaScore || "",
+      adminEmail
+    ]);
+    
+    return `Coaching session for ${sessionObject.agentName} saved successfully.`;
+
+  } catch (err) {
+    Logger.log("webSubmitCoaching Error: " + err.message);
+    return "Error: " + err.message;
+  }
+}
+
+/**
+ * Gets coaching history for the logged-in user or their team.
+ */
+function webGetCoachingHistory(filter) {
+  try {
+    const userEmail = Session.getActiveUser().getEmail().toLowerCase();
+    const ss = getSpreadsheet();
+    const dbSheet = getOrCreateSheet(ss, SHEET_NAMES.database);
+    const userData = getUserDataFromDb(dbSheet);
+    const role = userData.emailToRole[userEmail] || 'agent';
+    
+    const sheet = getOrCreateSheet(ss, SHEET_NAMES.coaching);
+    const allData = sheet.getDataRange().getValues();
+    const results = [];
+    
+    // Get a list of users this person manages (if they are a manager)
+    let myTeamEmails = new Set();
+    if (role === 'admin' || role === 'superadmin') {
+      userData.userList.forEach(user => {
+        if (user.supervisor === userEmail) {
+          myTeamEmails.add(user.email);
+        }
+      });
+    }
+
+    for (let i = allData.length - 1; i > 0; i--) { // Go backwards
+      const row = allData[i];
+      const agentEmail = row[2];
+      const coachEmail = row[4];
+
+      let canView = false;
+      if (role === 'agent' && agentEmail === userEmail) {
+        // An agent can see their own
+        canView = true;
+      } else if (role === 'admin' && (agentEmail === userEmail || coachEmail === userEmail || myTeamEmails.has(agentEmail))) {
+        // An admin can see their own, ones they coached, or their team's
+        canView = true;
+      } else if (role === 'superadmin') {
+        // Superadmin can see all
+        canView = true;
+      }
+
+      if (canView) {
+        results.push({
+          sessionID: row[0],
+          progressStatus: row[1],
+          agentName: row[3],
+          coachName: row[5],
+          sessionDate: convertDateToString(new Date(row[7])),
+          coachingTopic: row[10],
+          followUpPlan: row[13],
+          nextReviewDate: row[14] ? convertDateToString(new Date(row[14])) : null,
+          qaScore: row[16]
+        });
+      }
+    }
+    return results;
+
+  } catch (err) {
+    Logger.log("webGetCoachingHistory Error: " + err.message);
+    throw new Error(err.message);
+  }
+}
 // === NEW: Web App API for Manager Hierarchy ===
 function webGetManagerHierarchy() {
   try {
@@ -867,7 +981,17 @@ function getOrCreateSheet(ss, name) {
          "ActionDate", "ActionBy", "SupervisorEmail"] 
       ]);
       sheet.getRange("F:G").setNumberFormat("mm/dd/yyyy");
+          // ... inside getOrCreateSheet function
       sheet.getRange("J:J").setNumberFormat("mm/dd/yyyy");
+    } else if (name === SHEET_NAMES.coaching) { // <-- ADD THIS ENTIRE BLOCK
+      sheet.getRange("A1:R1").setValues([[
+        "SessionID", "Status", "AgentEmail", "AgentName", "CoachEmail", "CoachName",
+        "WeekNumber", "SessionDate", "AreaOfConcern", "RootCause", "CoachingTopic",
+        "ActionsTaken", "AgentFeedback", "FollowUpPlan", "NextReviewDate",
+        "QA_ID", "QA_Score", "LoggedByAdmin"
+      ]]);
+      sheet.getRange("H:H").setNumberFormat("mm/dd/yyyy");
+      sheet.getRange("O:O").setNumberFormat("mm/dd/yyyy");
     }
   }
   if (name === SHEET_NAMES.adherence) {
