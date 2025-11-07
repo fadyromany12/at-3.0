@@ -492,6 +492,11 @@
       #status, #schedule-status, #leave-status, #approval-status, #my-history-status, #manual-punch-status, #admin-leave-status, #csv-import-status, #balance-adjust-status, #my-schedule-status, #dashboard-status, #reporting-line-status {
           /* Inherits status-message styles */
       }
+      /* NEW: Added coaching statuses */
+      #coaching-submit-status, #coaching-list-status {
+          /* Inherits status-message styles */
+      }
+
 
       /* Success */
       .status-message.success { 
@@ -1167,6 +1172,62 @@
       /* End NEW Role Circles/Icons */
       /* --- END Hierarchy Tree View Styles --- */
 
+      /* --- NEW: Coaching QA Form Styles --- */
+      .qa-category {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: var(--page-bg); /* Use page-bg for nested forms */
+        border-radius: var(--radius);
+        border: 1px solid var(--border-color);
+      }
+      body.dark-mode .qa-category {
+         background-color: var(--page-bg);
+      }
+      .qa-category h4 {
+        margin: 0 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--konecta-blue);
+      }
+      .qa-criterion {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .qa-criterion:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+      .qa-criterion p {
+        margin: 0 0 8px 0;
+        font-weight: 500;
+        color: var(--text-color);
+      }
+      .qa-criterion-inputs {
+        display: flex;
+        gap: 15px;
+      }
+      .qa-criterion-inputs select {
+        flex: 1;
+        background-color: var(--card-bg); /* Use card-bg for inputs inside */
+      }
+      .qa-criterion-inputs textarea {
+        flex: 2;
+        height: 60px;
+        min-height: 60px;
+        background-color: var(--card-bg); /* Use card-bg for inputs inside */
+      }
+      #coaching-overall-score {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--konecta-dark);
+        margin-top: 10px;
+      }
+      body.dark-mode #coaching-overall-score {
+        color: var(--konecta-yellow);
+      }
+
       /* --- Responsive Design --- */
       @media (max-width: 900px) {
         /* Dashboard grid defaults to 1 column due to minmax(350px) but we explicitly set it for clarity */
@@ -1218,6 +1279,10 @@
         
         #dashboard-hierarchy-container {
              flex: none;
+        }
+        /* NEW: Responsive QA Form */
+        .qa-criterion-inputs {
+          flex-direction: column;
         }
       }
     </style>
@@ -1523,8 +1588,12 @@
           <div id="reporting-line-status" class="status-message"></div>
         </div>
 
+        <!-- ================================== -->
+        <!--    NEW TAB 10: COACHING PANEL      -->
+        <!-- ================================== -->
         <div id="coaching-panel" class="tab-panel">
-          <!-- Form Container -->
+          
+          <!-- Form Container (Now controlled by JS) -->
           <div id="coaching-form-container" class="form-container" style="display: none;">
             <h2>Submit New Coaching</h2>
             <div class="form-group">
@@ -1543,124 +1612,35 @@
             </div>
             
             <!-- Quality Score Section -->
-            <h3>Quality Score</h3>
+            <h3>Quality Score
+              <span id="coaching-overall-score" style="float: right;"></span>
+            </h3>
             <div id="quality-score-form">
               <!-- JS will populate this -->
             </div>
             
+            <hr class="section-divider">
+
             <div class="form-group">
               <label for="coaching-follow-up">Follow-up / Comments</label>
               <textarea id="coaching-follow-up" rows="4"></textarea>
             </div>
             
-            <button type="button" class="submit-btn-green" onclick="submitCoaching()">Submit Coaching</button>
+            <button type="button" class="submit-btn-green" onclick="submitNewCoaching()">Submit Coaching</button>
             <div id="coaching-submit-status" class="status-message"></div>
           </div>
 
           <!-- List Container -->
           <div id="coaching-list-container">
-            <h2>My Coaching History</h2>
+            <h2>My Coaching History</h2> <!-- Title will be changed by JS -->
             <div id="coaching-list-status" class="status-message"></div>
             <div id="coaching-list" class="request-list">
               <p class="text-color-secondary">Your coaching history will appear here.</p>
             </div>
           </div>
-        </div>
 
-      </div>
-          <h2>Coaching Session Manager</h2>
-          <p class="text-color-secondary">Log a new coaching session or review past history.</p>
-          
-          <form id="coaching-form" class="form-container">
-            <h2>New Coaching Session</h2>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="coach-agent-select">Select Agent</label>
-                <select id="coach-agent-select" required></select>
-              </div>
-              <div class="form-group">
-                <label for="coach-week-number">Week Number</label>
-                <input type="text" id="coach-week-number" placeholder="e.g., Week 45">
-              </div>
-            </div>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="coach-session-date">Date of Session</label>
-                <input type="date" id="coach-session-date" required>
-              </div>
-              <div class="form-group">
-                <label for="coach-progress-status">Progress Status</label>
-                <select id="coach-progress-status">
-                  <option value="Planned">Planned</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Needs Follow-up">Needs Follow-up</option>
-                </select>
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="coach-area-of-concern">Area of Concern</label>
-              <textarea id="coach-area-of-concern" rows="2" placeholder="e.g., Low QA Score, High AHT..."></textarea>
-            </div>
-            
-            <div class="form-group">
-              <label for="coach-root-cause">Root Cause Identified</label>
-              <textarea id="coach-root-cause" rows="2" placeholder="e.g., Lack of product knowledge..."></textarea>
-            </div>
+          <!-- REMOVED THE OLD/DUPLICATE COACHING FORM AND LIST -->
 
-            <div class="form-group">
-              <label for="coach-coaching-topic">Coaching Topic</label>
-              <textarea id="coach-coaching-topic" rows="2" required placeholder="e.g., Call Handling, Upselling Techniques..."></textarea>
-            </div>
-            
-            <div class="form-group">
-              <label for="coach-actions-taken">Actions Taken</label>
-              <textarea id="coach-actions-taken" rows="3" placeholder="e.g., Shared training material, Role-play session..."></textarea>
-            </div>
-
-            <div class="form-group">
-              <label for="coach-agent-feedback">Agent Feedback</label>
-              <textarea id="coach-agent-feedback" rows="2" placeholder="Summary of agent’s response..."></textarea>
-            </div>
-
-            <hr class="section-divider">
-            <h3>Follow-Up & QA</h3>
-
-            <div class="form-group">
-              <label for="coach-follow-up-plan">Follow-Up Plan</label>
-              <textarea id="coach-follow-up-plan" rows="2" placeholder="e.g., Schedule next session, Monitor KPIs..."></textarea>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="coach-next-review-date">Next Review Date</label>
-                <input type="date" id="coach-next-review-date">
-              </div>
-              <div class="form-group">
-                <label for="coach-qa-interaction-id">Optional: QA Interaction ID</label>
-                <input type="text" id="coach-qa-interaction-id" placeholder="e.g., 245928398">
-              </div>
-               <div class="form-group">
-                <label for="coach-qa-score">Optional: QA Overall Score</label>
-                <input type="text" id="coach-qa-score" placeholder="e.g., 97.50%">
-              </div>
-            </div>
-            
-            <button type="button" class="submit-btn-green" onclick="submitCoaching()">Save Coaching Session</button>
-          </form>
-          
-          <div id="coaching-status" class="status-message"></div>
-          
-          <hr class="section-divider">
-          
-          <div class="request-list">
-            <h2>My Coaching History</h2>
-            <div id="coaching-history-list"></div>
-          </div>
-          
         </div>
 
       </div>
@@ -1821,7 +1801,7 @@
            }
         // ADD THIS NEW BLOCK
         } else if (tabName === 'coaching') {
-          loadCoachingData();
+          loadMyCoaching(); // <-- Use the new function name
         }
       }
       
@@ -1850,6 +1830,8 @@
               loadDashboard();
             } else if (activeTabName === 'history-report' && lastHistoryData) {
               loadHistoryReport(); 
+            } else if (activeTabName === 'coaching') {
+              loadMyCoaching(); // <-- Use the new function name
             }
             
             setTimeout(() => {
@@ -1925,8 +1907,14 @@
           
           populateAdminDropdown(allUsersList, selfUserName, 'reporting-line-user', 'Select a user');
           populateSupervisorDropdown(allAdminsList, 'reporting-line-supervisor');
-          populateAdminDropdown(allUsersList, selfUserName, 'coach-agent-select', 'Select an agent');
           
+          // NEW: Populate coaching dropdown
+          populateAdminDropdown(allUsersList, selfUserName, 'coaching-agent-select', 'Select an agent');
+          
+          // NEW: Show coaching form for admins
+          document.getElementById('coaching-form-container').style.display = 'block';
+          document.getElementById('coaching-list-container').querySelector('h2').innerText = 'Subordinate Coaching History';
+
           if (user.role === 'superadmin') {
             loadPendingRequests('all'); 
           } else {
@@ -1939,8 +1927,13 @@
           
           // Hide custom select container for agents
           document.getElementById('history-user-select-container').style.display = 'none';
-        
+
+          // NEW: Hide coaching form for agents
+          document.getElementById('coaching-form-container').style.display = 'none';
+          document.getElementById('coaching-list-container').querySelector('h2').innerText = 'My Coaching History';
         }
+        
+        // Show coaching tab for everyone
         document.getElementById('coaching-tab-button').style.display = 'inline-block'; 
         loadMyRequests();
       }
@@ -2037,6 +2030,11 @@
 
         // Add all other users
         users.forEach(user => { 
+          // NEW: For coaching dropdown, only show non-admin users
+          if (dropdownId === 'coaching-agent-select' && (user.role === 'admin' || user.role === 'superadmin')) {
+             return;
+          }
+        
           const option = document.createElement('option');
           option.value = user.email; // Use EMAIL as value
           option.textContent = `${user.name} (${user.email})`;
@@ -3059,6 +3057,8 @@
                       return;
                   }
                   managerHierarchy = hierarchyData;
+                  // Clear the tree before rendering
+                  treeView.innerHTML = '';
                   renderHierarchyTree(hierarchyData, treeView);
                   
                   // Default selection: The manager's own node, loaded as a single user.
@@ -3491,33 +3491,183 @@
 
       // --- NEW: Coaching Functions ---
 
+      // --- Data Definitions ---
+      const qualityCategories = [
+        { 
+          category: "Greeting & Opening",
+          criteria: [
+            "Agent greeted the customer professionally and introduced themselves appropriately",
+            "Agent confirmed the customer’s name & purpose of the call/chat"
+          ]
+        },
+        {
+          category: "Communication Skills & Understanding Needs",
+          criteria: [
+            "Agent conversed actively without interrupting",
+            "Agent asked relevant questions to understand customer needs",
+            "Agent acknowledged customer concerns appropriately",
+            "Language was clear, understandable, and free of jargon",
+            "Agent applied correct hold etiquettes",
+            "Tone was confident, professional and engaging"
+          ]
+        },
+        {
+          category: "Product Knowledge & providing solution",
+          criteria: [
+            "Agent demonstrated strong knowledge of Lenovo products/services",
+            "Agent offered the right solution based on customer's needs",
+            "Agent was able to handle objections confidently & Highlighted Lenovo's competitive advantage"
+          ]
+        },
+        {
+          category: "Tools usage and Chat/ Call Logging",
+          criteria: [
+            "Agent applied correct disposition.",
+            "Agent logged the chat with all relevant details in Dynamics 365 B2C"
+          ]
+        },
+        {
+          category: "Sales Closing & Call to Action",
+          criteria: [
+            "Agent clearly stated pricing, offers, and benefits.",
+            "Agent confirmed next steps (e.g., sending a quote, scheduling a follow-up)"
+          ]
+        },
+        {
+          category: "Process Compliance",
+          criteria: [
+            "Agent followed Lenovo's sales process & compliance guidelines. OR Agent transfered the chat to the approriate que when applicable"
+          ]
+        },
+        {
+          category: "Wrap-Up & Closing",
+          criteria: [
+            "Agent confirmed if the customer’s query was fully addressed",
+            "Agent ended the chat approprietly.",
+            "Follow-up commitment created (if applicable)"
+          ]
+        }
+      ];
+      
+      const scoreOptions = [
+        { text: "-- Select Score --", value: "null" },
+        { text: "Got It (1)", value: "1" },
+        { text: "Getting There (0.5)", value: "0.5" },
+        { text: "Missed It (0)", value: "0" }
+      ];
+
+      /**
+       * Calculates ISO week number.
+       */
+      function getWeekNumber(d) {
+        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+        var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+        var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+        return weekNo;
+      }
+
+      /**
+       * Updates the week number input when the date changes.
+       */
+      function updateWeekNumber() {
+        const dateInput = document.getElementById('coaching-session-date');
+        const weekInput = document.getElementById('coaching-week-number');
+        if (dateInput.value) {
+          const date = new Date(dateInput.value);
+          // Adjust for local timezone offset to get correct UTC date for week calculation
+          const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+          const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
+          weekInput.value = 'Week ' + getWeekNumber(adjustedDate);
+        } else {
+          weekInput.value = '';
+        }
+      }
+
+      /**
+       * Dynamically builds the QA form from the category data.
+       */
+      function buildQualityForm() {
+        const formDiv = document.getElementById('quality-score-form');
+        if (!formDiv) return;
+        
+        let html = '';
+        qualityCategories.forEach((cat, catIndex) => {
+          html += `<div class="qa-category"><h4>${cat.category}</h4>`;
+          
+          cat.criteria.forEach((crit, critIndex) => {
+            html += `
+              <div class="qa-criterion">
+                <p>${crit}</p>
+                <div class="qa-criterion-inputs">
+                  <select id="qa-score-${catIndex}-${critIndex}" onchange="calculateOverallScore()">
+                    ${scoreOptions.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('')}
+                  </select>
+                  <textarea id="qa-comment-${catIndex}-${critIndex}" placeholder="Enter comments..."></textarea>
+                </div>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        });
+        formDiv.innerHTML = html;
+      }
+
+      /**
+       * Calculates and displays the overall QA score.
+       */
+      function calculateOverallScore() {
+        let totalScore = 0;
+        let totalPossible = 0;
+        
+        qualityCategories.forEach((cat, catIndex) => {
+          cat.criteria.forEach((crit, critIndex) => {
+            const scoreSelect = document.getElementById(`qa-score-${catIndex}-${critIndex}`);
+            if (scoreSelect && scoreSelect.value !== "null") {
+              totalScore += parseFloat(scoreSelect.value);
+              totalPossible += 1; // Each item is worth 1 point max
+            }
+          });
+        });
+        
+        const scoreSpan = document.getElementById('coaching-overall-score');
+        if (totalPossible === 0) {
+          scoreSpan.textContent = 'N/A';
+          return { score: 0, possible: 0, percentage: 0 };
+        } else {
+          const percentage = (totalScore / totalPossible) * 100;
+          scoreSpan.textContent = `${percentage.toFixed(2)}%`;
+          return { score: totalScore, possible: totalPossible, percentage: percentage };
+        }
+      }
+
       /**
        * Called when the 'Coaching' tab is clicked.
        */
-      function loadCoachingData() {
-        // Clear status from other tabs, then show loading
-        setStatus('coaching-status', 'processing', 'Loading coaching history...');
+      function loadMyCoaching() {
+        setStatus('coaching-list-status', 'processing', 'Loading coaching history...');
         
         google.script.run
-          .withSuccessHandler(populateCoachingHistory)
+          .withSuccessHandler(populateMyCoaching)
           .withFailureHandler(err => {
-            setStatus('coaching-status', 'error', err.message);
+            setStatus('coaching-list-status', 'error', err.message);
           })
-          .webGetCoachingHistory(null); // Filter is not used yet
+          .webGetCoachingHistory(null);
       }
 
       /**
        * Renders the list of past coaching sessions.
        */
-      function populateCoachingHistory(sessions) {
-        const listDiv = document.getElementById('coaching-history-list');
+      function populateMyCoaching(sessions) {
+        const listDiv = document.getElementById('coaching-list');
         if (sessions.error) {
           listDiv.innerHTML = `<p class="status-message error visible">${sessions.error}</p>`;
+          setStatus('coaching-list-status', '', '');
           return;
         }
         if (!sessions || sessions.length === 0) {
           listDiv.innerHTML = '<p class="text-color-secondary">No coaching history found.</p>';
-          setStatus('coaching-status', '', ''); // Clear loading message
+          setStatus('coaching-list-status', '', '');
           return;
         }
         
@@ -3526,89 +3676,103 @@
         sessions.sort((a, b) => new Date(b.sessionDate) - new Date(a.sessionDate));
 
         sessions.forEach(session => {
-          let statusClass = 'status-pending';
-          if (session.progressStatus === 'Completed') statusClass = 'status-approved';
-          if (session.progressStatus === 'Needs Follow-up') statusClass = 'status-denied';
+          let scoreDisplay = 'N/A';
+          if (session.overallScore) {
+             scoreDisplay = `${parseFloat(session.overallScore).toFixed(2)}%`;
+          }
 
           html += `
             <div class="request-list-item">
               <div class="item-details">
-                <h4>${session.agentName} - ${session.coachingTopic}</h4>
+                <h4>${session.agentName} - ${formatDate(session.sessionDate)} (${session.weekNumber})</h4>
                 <p><strong>Coach:</strong> ${session.coachName}</p>
-                <p><strong>Session Date:</strong> ${formatDate(session.sessionDate)}</p>
-                ${session.nextReviewDate ? `<p><strong>Next Review:</strong> ${formatDate(session.nextReviewDate)}</p>` : ''}
-                ${session.qaScore ? `<p><strong>QA Score:</strong> ${session.qaScore}</p>` : ''}
+                <p><strong>Overall Score:</strong> <strong style="color:var(--konecta-dark)">${scoreDisplay}</strong></p>
+                ${session.followUpComment ? `<p><strong>Follow-up:</strong> ${session.followUpComment}</p>` : ''}
               </div>
               <div class="item-actions">
-                <span class="status-badge ${statusClass}">${session.progressStatus}</span>
+                 <button type="button" class="deny-btn" style="background-color: var(--text-color-secondary); opacity: 0.6; cursor: not-allowed;" disabled title="Details coming soon">View Details</button>
               </div>
             </div>
           `;
         });
         
         listDiv.innerHTML = html;
-        setStatus('coaching-status', '', ''); // Clear loading message
+        setStatus('coaching-list-status', '', ''); // Clear loading message
       }
 
       /**
        * Submits the new coaching session form.
        */
-      function submitCoaching() {
+      function submitNewCoaching() {
         try {
           // Get user data
-          const agentSelect = document.getElementById('coach-agent-select');
+          const agentSelect = document.getElementById('coaching-agent-select');
           const selectedEmail = agentSelect.value;
-          // Get the name from the dropdown text, removing the (email) part
-          const selectedName = agentSelect.options[agentSelect.selectedIndex].text.split(' (')[0];
           
           if (!selectedEmail) throw new Error("Please select an agent.");
           
-          const coachName = selfUserName; // The logged-in user is the coach
-          const coachEmail = allUsersList.find(u => u.name === selfUserName)?.email || '';
+          const sessionDate = document.getElementById('coaching-session-date').value;
+          if (!sessionDate) throw new Error("Please select a session date.");
+          
+          const weekNumber = document.getElementById('coaching-week-number').value;
+          const followUpComment = document.getElementById('coaching-follow-up').value;
 
-          const coachingObject = {
+          // Gather scores
+          const scores = [];
+          qualityCategories.forEach((cat, catIndex) => {
+            cat.criteria.forEach((crit, critIndex) => {
+              const score = document.getElementById(`qa-score-${catIndex}-${critIndex}`).value;
+              const comment = document.getElementById(`qa-comment-${catIndex}-${critIndex}`).value;
+              
+              // Only save if a score was selected
+              if (score !== "null") {
+                scores.push({
+                  category: cat.category,
+                  criteria: crit,
+                  score: parseFloat(score),
+                  comment: comment
+                });
+              }
+            });
+          });
+
+          // Calculate final score
+          const { percentage } = calculateOverallScore();
+
+          const sessionObject = {
             agentEmail: selectedEmail,
-            agentName: selectedName,
-            coachEmail: coachEmail,
-            coachName: coachName,
-            weekNumber: document.getElementById('coach-week-number').value,
-            sessionDate: document.getElementById('coach-session-date').value,
-            progressStatus: document.getElementById('coach-progress-status').value,
-            areaOfConcern: document.getElementById('coach-area-of-concern').value,
-            rootCause: document.getElementById('coach-root-cause').value,
-            coachingTopic: document.getElementById('coach-coaching-topic').value,
-            actionsTaken: document.getElementById('coach-actions-taken').value,
-            agentFeedback: document.getElementById('coach-agent-feedback').value,
-            followUpPlan: document.getElementById('coach-follow-up-plan').value,
-            nextReviewDate: document.getElementById('coach-next-review-date').value,
-            qaInteractionID: document.getElementById('coach-qa-interaction-id').value,
-            qaScore: document.getElementById('coach-qa-score').value
+            sessionDate: sessionDate,
+            weekNumber: weekNumber,
+            scores: scores,
+            followUpComment: followUpComment,
+            overallScore: percentage
           };
           
-          if (!coachingObject.sessionDate || !coachingObject.coachingTopic) {
-            throw new Error("Session Date and Coaching Topic are required fields.");
-          }
-
-          setStatus('coaching-status', 'processing', `Saving session for ${selectedName}...`);
+          setStatus('coaching-submit-status', 'processing', `Saving session for ${agentSelect.options[agentSelect.selectedIndex].text}...`);
           
           google.script.run
             .withSuccessHandler(msg => {
               if (msg.startsWith('Error:')) {
-                setStatus('coaching-status', 'error', msg.replace('Error: ', ''));
+                setStatus('coaching-submit-status', 'error', msg.replace('Error: ', ''));
               } else {
-                setStatus('coaching-status', 'success', msg);
-                document.getElementById('coaching-form').reset();
-                document.getElementById('coach-session-date').valueAsDate = new Date();
-                loadCoachingData(); // Refresh the history list
+                setStatus('coaching-submit-status', 'success', msg);
+                // Reset form
+                document.getElementById('coaching-form-container').reset();
+                document.getElementById('coaching-agent-select').selectedIndex = 0;
+                document.getElementById('coaching-session-date').valueAsDate = new Date();
+                updateWeekNumber();
+                buildQualityForm(); // Re-builds the form, clearing it
+                calculateOverallScore(); // Resets score display
+                loadMyCoaching(); // Refresh the history list
               }
             })
             .withFailureHandler(err => {
-              setStatus('coaching-status', 'error', err.message);
+              setStatus('coaching-submit-status', 'error', err.message);
             })
-            .webSubmitCoaching(coachingObject);
+            .webSubmitCoaching(sessionObject);
 
         } catch (err) {
-          setStatus('coaching-status', 'error', err.message);
+          setStatus('coaching-submit-status', 'error', err.message);
         }
       }
       
@@ -3625,7 +3789,14 @@
         document.getElementById('manual-punch-date').valueAsDate = new Date(); 
         document.getElementById('admin-leave-start-date').valueAsDate = new Date(); 
         document.getElementById('dashboard-date').valueAsDate = new Date();
-        document.getElementById('coach-session-date').valueAsDate = new Date();
+        
+        // NEW: Coaching form init
+        document.getElementById('coaching-session-date').valueAsDate = new Date();
+        document.getElementById('coaching-session-date').addEventListener('change', updateWeekNumber);
+        buildQualityForm();
+        updateWeekNumber();
+        calculateOverallScore();
+
         toggleTimeFields();
       });
     </script>
