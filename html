@@ -23,10 +23,9 @@
         --konecta-yellow: #f0fa00; 
 
         /* Core UI - LIGHT MODE */
-        /* CHANGE 1: Swapped primary text color from Konecta Blue (#2101cd) to a soft black (#212121) */
         --text-color: #212121; 
-        --text-color-secondary: #5f6368; /* Google Gray for secondary/hint text */
-        --page-bg: #f4f7f6; /* Light White/Grey */
+        --text-color-secondary: #5f6368;
+        --page-bg: #f4f7f6;
         --card-bg: #ffffff;
         --border-color: #e0e0e0;
         --input-bg: #f8f9fa;
@@ -39,13 +38,13 @@
         --role-superadmin-bg: #2101cd;
         
         /* Status Colors (Unified) */
-        --status-pending: #feefc3; /* Yellowish */
+        --status-pending: #feefc3; 
         --status-pending-text: #744210;
-        --status-login: #edfbf3; /* Light Green (Logged In, Ready) */
+        --status-login: #edfbf3; 
         --status-login-text: #2a6944;
-        --status-break: #e6f4ff; /* Light Blue (Break/Other Code) */
+        --status-break: #e6f4ff; 
         --status-break-text: #174b85;
-        --status-leave: #fdebee; /* Light Red (Absent/Leave/Logged Out) */
+        --status-leave: #fdebee; 
         --status-leave-text: #c53030;
       }
 
@@ -61,8 +60,8 @@
         
         /* Adjusting role backgrounds for dark mode visibility */
         --role-user-bg: #252525; 
-        --role-admin-bg: #a1a600; /* Muted Yellow */
-        --role-superadmin-bg: #0d015c; /* Muted Dark Blue */
+        --role-admin-bg: #a1a600;
+        --role-superadmin-bg: #0d015c;
         
         /* Status Colors (Dark Mode) */
         --status-pending: #4b2a0c; 
@@ -77,7 +76,25 @@
       
       /* --- Global Transitions and Font --- */
       * {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth Material Design-like curve */
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* NEW: Custom Scrollbar for modern browsers */
+        scrollbar-color: var(--konecta-dark) var(--page-bg); 
+        scrollbar-width: thin; 
+      }
+      /* NEW: Webkit Scrollbar Styling (Chrome/Safari) */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--page-bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--konecta-dark);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--konecta-blue);
       }
       
       body, html {
@@ -86,12 +103,27 @@
         padding: 0;
         background-color: var(--page-bg);
         color: var(--text-color);
-        /* MODIFIED: Ensure body takes up full screen height */
         min-height: 100vh;
+        
+        /* NEW: Subtle Konecta Branding Background (Dots) */
+        background-image: 
+          radial-gradient(var(--border-color) 1px, transparent 1px),
+          radial-gradient(var(--border-color) 1px, transparent 1px);
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+      }
+      
+      /* Dark Mode Pattern Adjustment */
+      body.dark-mode {
+          /* Inherits dark mode vars */
+          
+          /* Adjusting pattern visibility for dark mode */
+          background-image: 
+            radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
       }
       
       body {
-        /* MODIFIED: Use flexbox for sticky footer/full height layout */
         display: flex;
         flex-direction: column;
       }
@@ -102,7 +134,7 @@
       
       /* --- Role-Based Body Background (The Revolution!) --- */
       body[data-role="agent"] main, body[data-role="agent"] header {
-          background-color: var(--card-bg); /* Use standard card BG for user role area */
+          background-color: var(--card-bg);
       }
 
       body[data-role="admin"] header {
@@ -147,7 +179,7 @@
         padding: 15px 30px;
         background-color: var(--card-bg);
         border-bottom: 2px solid var(--border-color);
-        position: sticky; /* Keep it visible */
+        position: sticky;
         top: 0;
         z-index: 100;
       }
@@ -211,8 +243,8 @@
         position: relative;
         display: flex;
         align-items: center;
-        height: 34px; /* Matches the vertical space of the refresh button */
-        margin-right: 5px; /* Adds spacing */
+        height: 34px;
+        margin-right: 5px;
       }
 
       #dark-mode-toggle {
@@ -257,18 +289,18 @@
 
       .sun-icon {
         left: 8px;
-        opacity: 1; /* Visible by default (light mode) */
+        opacity: 1;
       }
 
       .moon-icon {
         right: 8px;
-        opacity: 0; /* Hidden by default */
+        opacity: 0;
       }
 
       /* Checked state (Dark Mode) */
       #dark-mode-toggle:checked + .switch-label:before {
         transform: translateX(26px);
-        background-color: var(--konecta-dark); /* Darker color for dark mode state */
+        background-color: var(--konecta-dark);
       }
 
       #dark-mode-toggle:checked + .switch-label .sun-icon {
@@ -282,14 +314,14 @@
 
       /* --- Centered Card Layout --- */
       main {
-        max-width: 1600px; /* MODIFIED: Increased max-width for wider interface */
-        /* MODIFIED: Set bottom margin to 0 for sticky footer */
+        max-width: 1600px;
         margin: 30px auto 0 auto; 
         background-color: var(--card-bg);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         overflow: hidden;
-        flex-grow: 1; /* MODIFIED: Allows main to expand and push footer down */
+        flex-grow: 1;
+        transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); /* Slower, smoother shadow transition */
       }
       
       /* --- Tab Navigation --- */
@@ -297,8 +329,8 @@
         border-bottom: 1px solid var(--border-color);
         padding-top: 10px;
         display: flex;
-        justify-content: flex-start; /* Align left */
-        overflow-x: auto; /* Allow horizontal scroll on mobile */
+        justify-content: flex-start;
+        overflow-x: auto;
         padding-left: 30px;
         background-color: var(--card-bg);
       }
@@ -312,7 +344,7 @@
         border-bottom: 3px solid transparent;
         transition: all 0.3s ease;
         color: var(--text-color-secondary);
-        white-space: nowrap; /* Prevent wrapping */
+        white-space: nowrap;
       }
       .tab-button:hover {
         background-color: var(--input-bg);
@@ -404,7 +436,7 @@
         background-color: var(--konecta-blue);
         color: white;
         letter-spacing: 0.5px;
-        box-shadow: 0 4px 10px rgba(0, 169, 224, 0.3); /* Blue shadow */
+        box-shadow: 0 4px 10px rgba(0, 169, 224, 0.3);
         transition: all 0.2s ease-out; 
         min-width: 160px;
       }
@@ -505,7 +537,7 @@
         display: block;
         font-weight: 500;
         margin-bottom: 8px;
-        color: var(--text-color-secondary); /* Calm font color for labels */
+        color: var(--text-color-secondary);
       }
       .form-group select, .form-group input, .form-group textarea {
         width: 100%;
@@ -698,8 +730,6 @@
         margin-bottom: 0;
       }
       
-      /* REMOVED: #history-user-select fixed heights */
-      
       #history-report-form button {
         width: auto;
         min-width: 150px;
@@ -750,7 +780,7 @@
       }
       #dashboard-filters .load-btn { background-color: var(--konecta-dark); }
       #dashboard-filters .load-btn:hover { background-color: #1a0199; }
-      #dashboard-filters .team-btn { background-color: #34a853; } /* Green for loading team */
+      #dashboard-filters .team-btn { background-color: #34a853; }
       #dashboard-filters .team-btn:hover { background-color: #2c8c45; }
       #dashboard-filters .save-btn { background-color: var(--konecta-blue); }
       #dashboard-filters .save-btn:hover { background-color: #008fbc; }
@@ -794,7 +824,6 @@
       /* --- Dashboard Grid Restructure (MODIFIED) --- */
       #dashboard-grid {
           display: grid;
-          /* Flexible columns: 2 per row when space allows (min-width 350px per column) */
           grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
           gap: 20px;
       }
@@ -818,7 +847,7 @@
       }
       .chart-container, .table-container {
         width: 100%;
-        min-height: 350px; /* Increased height for better chart viewing */
+        min-height: 350px;
         overflow-y: auto;
       }
 
@@ -832,8 +861,8 @@
       /* --- FOOTER STYLES (NEW/MODIFIED) --- */
       footer {
         padding: 15px 30px;
-        margin-top: auto; /* Pushes the footer to the bottom of the content/viewport */
-        text-align: center; /* Centers the text horizontally */
+        margin-top: auto;
+        text-align: center;
         width: 100%;
         background-color: var(--card-bg); 
         border-top: 1px solid var(--border-color); 
@@ -842,7 +871,7 @@
       }
       
       footer p {
-        margin: 0; /* Remove default paragraph margin */
+        margin: 0;
         font-size: 0.9rem;
       }
 
@@ -858,13 +887,13 @@
       
       /* Style item cards for Dashboard Details */
       .dashboard-detail-item {
-        background-color: var(--card-bg); /* Use card BG for contrast */
+        background-color: var(--card-bg);
         border: 1px solid var(--border-color);
         border-left: 5px solid var(--konecta-blue);
         border-radius: 8px;
         padding: 15px;
         display: grid;
-        grid-template-columns: repeat(3, 1fr); /* Default grid layout for details */
+        grid-template-columns: repeat(3, 1fr);
         gap: 10px 5px;
         font-size: 0.9rem;
         transition: all 0.3s ease;
@@ -884,7 +913,7 @@
       .dashboard-detail-item .detail-value {
         font-weight: 600;
         color: var(--text-color);
-        grid-column: span 2; /* Value spans the rest of the row */
+        grid-column: span 2;
         text-align: right;
       }
       
@@ -892,7 +921,7 @@
       .dashboard-leave-item {
         background-color: var(--input-bg);
         border: 1px solid var(--border-color);
-        border-left: 5px solid #34a853; /* Use green border for pending leave */
+        border-left: 5px solid #34a853;
         border-radius: 8px;
         padding: 15px;
         display: flex;
@@ -941,10 +970,10 @@
       }
       .status-tag {
         padding: 5px 10px;
-        border-radius: 15px;
         font-size: 0.85rem;
         font-weight: 600;
         white-space: nowrap;
+        border-radius: 9999px; /* Pill shape */
       }
 
       /* --- NEW: Custom Multi-Select Styles (History only) --- */
@@ -1000,10 +1029,9 @@
         border: 1px solid var(--border-color);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
-        display: none; /* Hidden by default */
+        display: none;
         margin-top: 5px;
         padding: 5px 0;
-        /* Ensure dark mode colors apply */
         color: var(--text-color);
       }
       
@@ -1011,7 +1039,7 @@
       .custom-select-dropdown input[type="checkbox"] {
           margin-right: 10px;
           cursor: pointer;
-          accent-color: var(--konecta-blue); /* Sets the checkbox color */
+          accent-color: var(--konecta-blue);
           min-width: 18px;
           min-height: 18px;
       }
@@ -1039,7 +1067,7 @@
       }
 
       .dropdown-item.selected:hover {
-        background-color: #008fbc; /* Slightly darker blue on hover */
+        background-color: #008fbc;
       }
       .dropdown-item.selected label {
         color: white;
@@ -1048,12 +1076,12 @@
 
       /* --- NEW: Hierarchy Tree View Styles --- */
       #dashboard-hierarchy-container {
-          flex: 2; /* Make it take more space than the date picker */
+          flex: 2;
           min-width: 300px;
       }
       #hierarchy-tree-view {
           padding: 10px;
-          max-height: 300px; /* Constrain height */
+          max-height: 300px;
           overflow-y: auto;
           border: 1px solid var(--border-color);
           border-radius: 8px;
@@ -1086,7 +1114,6 @@
       .tree-node.selected span, .tree-node.selected img {
           filter: invert(1); 
       }
-      /* Specific override for selected state text */
       .tree-node.selected .tree-label {
           color: white !important;
       }
@@ -1116,7 +1143,7 @@
           margin-left: 15px;
           padding-left: 5px;
           border-left: 1px solid var(--border-color);
-          display: none; /* Hidden when collapsed */
+          display: none;
       }
       
       /* --- NEW: Role Circles/Icons --- */
@@ -1190,7 +1217,7 @@
         }
         
         #dashboard-hierarchy-container {
-             flex: none; /* Disable flex growth on mobile for simpler stacking */
+             flex: none;
         }
       }
     </style>
@@ -1230,6 +1257,7 @@
         <button id="schedule-tab-button" class="tab-button" onclick="showTab('schedule')">Schedule Editor</button>
         <button id="admin-tools-tab-button" class="tab-button" onclick="showTab('admin-tools')">Admin Tools</button>
         <button id="reporting-line-tab-button" class="tab-button" onclick="showTab('reporting-line')">Reporting Line</button>
+        <button id="coaching-tab-button" class="tab-button" onclick="showTab('coaching')">Coaching</button>
       </div>
 
       <div class="content-container">
@@ -1495,7 +1523,148 @@
           <div id="reporting-line-status" class="status-message"></div>
         </div>
 
-      </div> <!-- End .content-container -->
+        <div id="coaching-panel" class="tab-panel">
+          <!-- Form Container -->
+          <div id="coaching-form-container" class="form-container" style="display: none;">
+            <h2>Submit New Coaching</h2>
+            <div class="form-group">
+              <label for="coaching-agent-select">Select User</label>
+              <select id="coaching-agent-select" required></select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="coaching-session-date">Session Date</label>
+                <input type="date" id="coaching-session-date" required>
+              </div>
+              <div class="form-group">
+                <label for="coaching-week-number">Week Number</label>
+                <input type="text" id="coaching-week-number" readonly>
+              </div>
+            </div>
+            
+            <!-- Quality Score Section -->
+            <h3>Quality Score</h3>
+            <div id="quality-score-form">
+              <!-- JS will populate this -->
+            </div>
+            
+            <div class="form-group">
+              <label for="coaching-follow-up">Follow-up / Comments</label>
+              <textarea id="coaching-follow-up" rows="4"></textarea>
+            </div>
+            
+            <button type="button" class="submit-btn-green" onclick="submitCoaching()">Submit Coaching</button>
+            <div id="coaching-submit-status" class="status-message"></div>
+          </div>
+
+          <!-- List Container -->
+          <div id="coaching-list-container">
+            <h2>My Coaching History</h2>
+            <div id="coaching-list-status" class="status-message"></div>
+            <div id="coaching-list" class="request-list">
+              <p class="text-color-secondary">Your coaching history will appear here.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+          <h2>Coaching Session Manager</h2>
+          <p class="text-color-secondary">Log a new coaching session or review past history.</p>
+          
+          <form id="coaching-form" class="form-container">
+            <h2>New Coaching Session</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="coach-agent-select">Select Agent</label>
+                <select id="coach-agent-select" required></select>
+              </div>
+              <div class="form-group">
+                <label for="coach-week-number">Week Number</label>
+                <input type="text" id="coach-week-number" placeholder="e.g., Week 45">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="coach-session-date">Date of Session</label>
+                <input type="date" id="coach-session-date" required>
+              </div>
+              <div class="form-group">
+                <label for="coach-progress-status">Progress Status</label>
+                <select id="coach-progress-status">
+                  <option value="Planned">Planned</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Needs Follow-up">Needs Follow-up</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="coach-area-of-concern">Area of Concern</label>
+              <textarea id="coach-area-of-concern" rows="2" placeholder="e.g., Low QA Score, High AHT..."></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label for="coach-root-cause">Root Cause Identified</label>
+              <textarea id="coach-root-cause" rows="2" placeholder="e.g., Lack of product knowledge..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="coach-coaching-topic">Coaching Topic</label>
+              <textarea id="coach-coaching-topic" rows="2" required placeholder="e.g., Call Handling, Upselling Techniques..."></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label for="coach-actions-taken">Actions Taken</label>
+              <textarea id="coach-actions-taken" rows="3" placeholder="e.g., Shared training material, Role-play session..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="coach-agent-feedback">Agent Feedback</label>
+              <textarea id="coach-agent-feedback" rows="2" placeholder="Summary of agent’s response..."></textarea>
+            </div>
+
+            <hr class="section-divider">
+            <h3>Follow-Up & QA</h3>
+
+            <div class="form-group">
+              <label for="coach-follow-up-plan">Follow-Up Plan</label>
+              <textarea id="coach-follow-up-plan" rows="2" placeholder="e.g., Schedule next session, Monitor KPIs..."></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="coach-next-review-date">Next Review Date</label>
+                <input type="date" id="coach-next-review-date">
+              </div>
+              <div class="form-group">
+                <label for="coach-qa-interaction-id">Optional: QA Interaction ID</label>
+                <input type="text" id="coach-qa-interaction-id" placeholder="e.g., 245928398">
+              </div>
+               <div class="form-group">
+                <label for="coach-qa-score">Optional: QA Overall Score</label>
+                <input type="text" id="coach-qa-score" placeholder="e.g., 97.50%">
+              </div>
+            </div>
+            
+            <button type="button" class="submit-btn-green" onclick="submitCoaching()">Save Coaching Session</button>
+          </form>
+          
+          <div id="coaching-status" class="status-message"></div>
+          
+          <hr class="section-divider">
+          
+          <div class="request-list">
+            <h2>My Coaching History</h2>
+            <div id="coaching-history-list"></div>
+          </div>
+          
+        </div>
+
+      </div>
+      
     </main> <!-- End .card -->
 
     <!-- MODIFIED: Footer is now positioned by CSS/Flexbox -->
@@ -1564,7 +1733,9 @@
         }
         
         // Re-draw charts when theme changes to apply new colors
-        if (chartsLoaded && window.lastDashboardData) {
+        // Note: The original code expected Google Charts, but since they were removed
+        // we keep the redraw logic here for completeness, though it's mainly for aesthetics now.
+        if (window.lastDashboardData) {
             drawDashboard(window.lastDashboardData);
         }
       }
@@ -1643,10 +1814,14 @@
         } else if (tabName === 'my-schedule') {
           loadMySchedule();
         } else if (tabName === 'dashboard') {
-            loadManagerHierarchy(); // NEW: Load hierarchy when dashboard is active
-            if (window.lastDashboardData) {
-                drawDashboard(window.lastDashboardData);
-            }
+           loadManagerHierarchy();
+           if (window.lastDashboardData) {
+               // Re-draw on tab switch to apply theme/resize changes
+               drawDashboard(window.lastDashboardData);
+           }
+        // ADD THIS NEW BLOCK
+        } else if (tabName === 'coaching') {
+          loadCoachingData();
         }
       }
       
@@ -1671,8 +1846,8 @@
             } else if (activeTabName === 'my-schedule') {
               loadMySchedule();
             } else if (activeTabName === 'dashboard') {
-              loadManagerHierarchy(); // Reload hierarchy
-              loadDashboard(); // Reload dashboard data
+              loadManagerHierarchy();
+              loadDashboard();
             } else if (activeTabName === 'history-report' && lastHistoryData) {
               loadHistoryReport(); 
             }
@@ -1750,7 +1925,7 @@
           
           populateAdminDropdown(allUsersList, selfUserName, 'reporting-line-user', 'Select a user');
           populateSupervisorDropdown(allAdminsList, 'reporting-line-supervisor');
-          
+          populateAdminDropdown(allUsersList, selfUserName, 'coach-agent-select', 'Select an agent');
           
           if (user.role === 'superadmin') {
             loadPendingRequests('all'); 
@@ -1763,9 +1938,10 @@
           document.getElementById('history-report-tab-button').style.display = 'inline-block'; 
           
           // Hide custom select container for agents
-          document.getElementById('history-user-select-container').style.display = 'none'; 
-        }
+          document.getElementById('history-user-select-container').style.display = 'none';
         
+        }
+        document.getElementById('coaching-tab-button').style.display = 'inline-block'; 
         loadMyRequests();
       }
 
@@ -2020,6 +2196,36 @@
         
         return str.trim();
       }
+      
+      // --- NEW Helper to format seconds with color for Dashboard ---
+      function getStatusClass(status) {
+          // Converts status string to CSS class format
+          return status.replace(/[\s\/-]/g, '-');
+      }
+
+      function formatColoredSeconds(seconds, isPositive) {
+          if (typeof seconds !== 'number' || isNaN(seconds) || seconds === 0) {
+              return '0';
+          }
+          
+          // Deviation (Tardy, Early, Exceed) is negative, Overtime is positive
+          const actualSeconds = isPositive ? seconds : Math.abs(seconds);
+          
+          const h = Math.floor(actualSeconds / 3600);
+          const m = Math.floor((actualSeconds % 3600) / 60);
+          const s = Math.floor(actualSeconds % 60);
+          
+          let str = '';
+          if (h > 0) str += `${h}h `;
+          if (m > 0) str += `${m}m `;
+          if (s > 0 || (h === 0 && m === 0)) str += `${s}s`;
+          
+          // Choose color: Red for deviation, Green for positive (Overtime)
+          const color = isPositive ? '#34a853' : '#ea4335';
+          
+          return `<span style="font-weight: 600; color: ${color};">${str.trim()}</span>`;
+      }
+
 
       function onMyRequestsFailure(error) {
         const listDiv = document.getElementById('my-requests-list');
@@ -2192,7 +2398,6 @@
                   (${req.totalDays} ${req.totalDays > 1 ? 'days' : 'day'})
                 </p>
                 <p><strong>Submitted:</strong> ${formatDate(req.requestedDate)}</p>
-                ${req.reason ? `<p><strong>Reason:</strong> ${req.reason}</p>` : ''}
                 <p class="supervisor-info text-color-secondary"><strong>Assigned Supervisor:</strong> ${req.supervisorName || 'N/A'}</p>
                 ${balanceInfo} 
               </div>
@@ -2219,9 +2424,9 @@
             }
             const currentFilter = document.getElementById('filter-mine').classList.contains('active') ? 'mine' : 'all';
             loadPendingRequests(currentFilter);
-            loadMyRequests(); // Update self requests
+            loadMyRequests();
             google.script.run.withSuccessHandler(user => {
-              populateMyBalances(user.myBalances); // Update self balances
+              populateMyBalances(user.myBalances);
             }).getUserInfo();
           })
           .withFailureHandler(err => {
@@ -2257,7 +2462,7 @@
           return;
         }
 
-        setStatus('my-schedule-status', 'success', ''); // Clear status
+        setStatus('my-schedule-status', 'success', '');
 
         let html = `
           <table class="schedule-table">
@@ -2898,7 +3103,7 @@
           nodeDiv.setAttribute('data-has-children', hasChildren);
           nodeDiv.onclick = (e) => handleNodeClick(e, node);
 
-          // Build the content of the node (REPLACED IMAGE TAGS WITH DIVS)
+          // Build the content of the node
           nodeDiv.innerHTML = `
               <img src="https://icons.veryicon.com/png/o/miscellaneous/cloud-services/arrow-right-13.png" class="toggle-icon" alt="Toggle">
               <span class="tree-label">
@@ -2960,10 +3165,7 @@
       
       // Reworked loadDashboard to use the new selection state
       function loadDashboard() {
-        if (!chartsLoaded) {
-          google.charts.setOnLoadCallback(loadDashboard);
-          return;
-        }
+        // Since Google Charts are not used for these visuals, we can remove the chartsLoaded check
         
         const date = document.getElementById('dashboard-date').value;
         if (!date) {
@@ -2998,8 +3200,8 @@
                     .withFailureHandler(err => {
                         setStatus('dashboard-status', 'error', `Failed to load hierarchy list: ${err.message}`);
                     })
-                    .webGetAllSubordinateEmails(currentDashboardSelection.emails[0]); // Send the manager's email
-                return; // Wait for async call to finish
+                    .webGetAllSubordinateEmails(currentDashboardSelection.emails[0]);
+                return;
             } else {
                  // Full hierarchy list was already loaded via 'Load My Full Hierarchy' button
                  userEmailsToQuery = currentDashboardSelection.emails;
@@ -3024,13 +3226,22 @@
       function fetchDashboardData(userEmails, date, dashboardTitle) {
           setStatus('dashboard-status', 'processing', `Loading data for ${userEmails.length} user(s) on ${formatDate(date)}...`);
           
+          // Clear old data placeholders immediately to show processing
+          document.getElementById('status-agent-list').innerHTML = '<p class="text-color-secondary">Loading...</p>';
+          document.getElementById('adherence-detail-table').innerHTML = '<p class="text-color-secondary">Loading...</p>';
+          document.getElementById('pending-leave-table').innerHTML = '<p class="text-color-secondary">Loading...</p>';
+
+
           google.script.run
             .withSuccessHandler(data => {
                 window.lastDashboardData = data; 
                 drawDashboard(data);
             })
             .withFailureHandler(err => {
-              setStatus('dashboard-status', 'error', err.message);
+              setStatus('dashboard-status', 'error', 'Server Error: ' + err.message);
+              document.getElementById('status-agent-list').innerHTML = '<p class="text-color-secondary">Error loading data.</p>'; 
+              document.getElementById('adherence-detail-table').innerHTML = '<p class="text-color-secondary">Error loading data.</p>';
+              document.getElementById('pending-leave-table').innerHTML = '<p class="text-color-secondary">Error loading data.</p>';
             })
             .webGetDashboardData(userEmails, date);
       }
@@ -3072,13 +3283,6 @@
         
         setStatus('dashboard-status', 'success', 'Dashboard loaded successfully.');
         
-        const isDarkMode = document.body.classList.contains('dark-mode');
-        const textColor = isDarkMode ? '#f4f7f6' : '#212121';
-        const titleColor = isDarkMode ? '#00a9e0' : '#2101cd'; // Use Konecta blue for title in dark mode
-        const chartGridColor = isDarkMode ? '#444' : '#e0e0e0';
-        const legendColor = isDarkMode ? '#b0b0b0' : '#5f6368';
-        
-        
         // --- 1. Draw Status Agent List ---
         const statusAgentDiv = document.getElementById('status-agent-list');
         let statusHtml = '';
@@ -3086,10 +3290,13 @@
         if (!data.statusCounts || data.statusCounts.length === 0) {
              statusHtml = '<p class="text-color-secondary">No user status information available for this date/team.</p>';
         } else {
-             const statusDistribution = data.statusCounts.map(s => ({ status: s[0], count: s[1] }));
+             // Filter out statuses with 0 count and format the HTML
+             const statusDistribution = data.statusCounts.map(s => ({ status: s[0], count: s[1] })).filter(s => s.count > 0);
              
-             statusDistribution.forEach(dist => {
-                  if (dist.count > 0) {
+             if (statusDistribution.length === 0) {
+                 statusHtml = '<p class="text-color-secondary">All scheduled users are accounted for (0 currently live).</p>';
+             } else {
+                  statusDistribution.forEach(dist => {
                       const statusClass = getStatusClass(dist.status);
                       statusHtml += `
                           <div class="agent-status-item">
@@ -3097,8 +3304,8 @@
                               <span class="status-tag status-${statusClass}">${dist.count} Agent(s)</span>
                           </div>
                       `;
-                  }
-             });
+                  });
+             }
         }
         statusAgentDiv.innerHTML = statusHtml;
 
@@ -3110,34 +3317,50 @@
         if (!data.individualAdherenceMetrics || data.individualAdherenceMetrics.length === 0) {
             adherenceHtml = '<p class="text-color-secondary">No adherence data found for selected users today (No logins recorded).</p>';
         } else {
-            // Sort by Tardy/Early Leave (worst offenders first)
-            data.individualAdherenceMetrics.sort((a, b) => {
-                 const aDeviation = a.tardy + a.earlyLeave + a.breakExceed + a.lunchExceed;
-                 const bDeviation = b.tardy + b.earlyLeave + b.breakExceed + b.lunchExceed;
-                 return bDeviation - aDeviation; // Descending order
+            // Filter users with zero deviation and sort by deviation (worst offenders first)
+            const filteredMetrics = data.individualAdherenceMetrics.filter(user => {
+                 const deviation = user.tardy + user.earlyLeave + user.breakExceed + user.lunchExceed;
+                 return deviation > 0 || user.overtime > 0;
             });
             
-            data.individualAdherenceMetrics.forEach(user => {
-                const totalBreakExceed = (parseInt(user.breakExceed, 10) || 0) + (parseInt(user.lunchExceed, 10) || 0);
-                adherenceHtml += `
-                    <div class="dashboard-detail-item">
-                        <h4 class="detail-label" style="grid-column: 1 / -1; margin: 0; padding-bottom: 5px; border-bottom: 1px solid var(--border-color); color: var(--konecta-blue);">${user.name}</h4>
-                        
-                        <span class="detail-label">Tardy:</span>
-                        <span class="detail-value">${formatColoredSeconds(user.tardy, false)}</span>
-                        
-                        <span class="detail-label">Early Leave:</span>
-                        <span class="detail-value">${formatColoredSeconds(user.earlyLeave, false)}</span>
-                        
-                        <span class="detail-label">Overtime:</span>
-                        <span class="detail-value">${formatColoredSeconds(user.overtime, true)}</span>
-                        
-                        <span class="detail-label">Break Exceed:</span>
-                        <span class="detail-value">${formatColoredSeconds(totalBreakExceed, false)}</span>
-                        
-                    </div>
-                `;
+            filteredMetrics.sort((a, b) => {
+                 // Sort primarily by negative deviation (Tardy, Early, Breaks)
+                 const aNegDeviation = a.tardy + a.earlyLeave + a.breakExceed + a.lunchExceed;
+                 const bNegDeviation = b.tardy + b.earlyLeave + b.breakExceed + b.lunchExceed;
+                 
+                 if (bNegDeviation !== aNegDeviation) {
+                    return bNegDeviation - aNegDeviation;
+                 }
+                 
+                 // Secondary sort by Overtime
+                 return b.overtime - a.overtime;
             });
+            
+            if (filteredMetrics.length === 0) {
+                adherenceHtml = '<p class="text-color-secondary">All selected users have perfect adherence today. Great job!</p>';
+            } else {
+                filteredMetrics.forEach(user => {
+                    const totalBreakExceed = (parseInt(user.breakExceed, 10) || 0) + (parseInt(user.lunchExceed, 10) || 0);
+                    adherenceHtml += `
+                        <div class="dashboard-detail-item">
+                            <h4 class="detail-label" style="grid-column: 1 / -1; margin: 0; padding-bottom: 5px; border-bottom: 1px solid var(--border-color); color: var(--konecta-blue);">${user.name}</h4>
+                            
+                            <span class="detail-label">Tardy:</span>
+                            <span class="detail-value">${formatColoredSeconds(user.tardy, false)}</span>
+                            
+                            <span class="detail-label">Early Leave:</span>
+                            <span class="detail-value">${formatColoredSeconds(user.earlyLeave, false)}</span>
+                            
+                            <span class="detail-label">Overtime:</span>
+                            <span class="detail-value">${formatColoredSeconds(user.overtime, true)}</span>
+                            
+                            <span class="detail-label">Break Exceed:</span>
+                            <span class="detail-value">${formatColoredSeconds(totalBreakExceed, false)}</span>
+                            
+                        </div>
+                    `;
+                });
+            }
         }
         adherenceDetailDiv.innerHTML = adherenceHtml;
 
@@ -3211,7 +3434,7 @@
                 currentDashboardSelection = {
                     emails: teamEmails,
                     name: `Saved Team (${teamEmails.length} users)`,
-                    isFullHierarchy: false // Saved team is just a static list
+                    isFullHierarchy: false
                 };
                 
                 document.getElementById('selected-user-display').textContent = currentDashboardSelection.name;
@@ -3266,6 +3489,132 @@
         }
       }
 
+      // --- NEW: Coaching Functions ---
+
+      /**
+       * Called when the 'Coaching' tab is clicked.
+       */
+      function loadCoachingData() {
+        // Clear status from other tabs, then show loading
+        setStatus('coaching-status', 'processing', 'Loading coaching history...');
+        
+        google.script.run
+          .withSuccessHandler(populateCoachingHistory)
+          .withFailureHandler(err => {
+            setStatus('coaching-status', 'error', err.message);
+          })
+          .webGetCoachingHistory(null); // Filter is not used yet
+      }
+
+      /**
+       * Renders the list of past coaching sessions.
+       */
+      function populateCoachingHistory(sessions) {
+        const listDiv = document.getElementById('coaching-history-list');
+        if (sessions.error) {
+          listDiv.innerHTML = `<p class="status-message error visible">${sessions.error}</p>`;
+          return;
+        }
+        if (!sessions || sessions.length === 0) {
+          listDiv.innerHTML = '<p class="text-color-secondary">No coaching history found.</p>';
+          setStatus('coaching-status', '', ''); // Clear loading message
+          return;
+        }
+        
+        let html = '';
+        // Sort by session date, newest first
+        sessions.sort((a, b) => new Date(b.sessionDate) - new Date(a.sessionDate));
+
+        sessions.forEach(session => {
+          let statusClass = 'status-pending';
+          if (session.progressStatus === 'Completed') statusClass = 'status-approved';
+          if (session.progressStatus === 'Needs Follow-up') statusClass = 'status-denied';
+
+          html += `
+            <div class="request-list-item">
+              <div class="item-details">
+                <h4>${session.agentName} - ${session.coachingTopic}</h4>
+                <p><strong>Coach:</strong> ${session.coachName}</p>
+                <p><strong>Session Date:</strong> ${formatDate(session.sessionDate)}</p>
+                ${session.nextReviewDate ? `<p><strong>Next Review:</strong> ${formatDate(session.nextReviewDate)}</p>` : ''}
+                ${session.qaScore ? `<p><strong>QA Score:</strong> ${session.qaScore}</p>` : ''}
+              </div>
+              <div class="item-actions">
+                <span class="status-badge ${statusClass}">${session.progressStatus}</span>
+              </div>
+            </div>
+          `;
+        });
+        
+        listDiv.innerHTML = html;
+        setStatus('coaching-status', '', ''); // Clear loading message
+      }
+
+      /**
+       * Submits the new coaching session form.
+       */
+      function submitCoaching() {
+        try {
+          // Get user data
+          const agentSelect = document.getElementById('coach-agent-select');
+          const selectedEmail = agentSelect.value;
+          // Get the name from the dropdown text, removing the (email) part
+          const selectedName = agentSelect.options[agentSelect.selectedIndex].text.split(' (')[0];
+          
+          if (!selectedEmail) throw new Error("Please select an agent.");
+          
+          const coachName = selfUserName; // The logged-in user is the coach
+          const coachEmail = allUsersList.find(u => u.name === selfUserName)?.email || '';
+
+          const coachingObject = {
+            agentEmail: selectedEmail,
+            agentName: selectedName,
+            coachEmail: coachEmail,
+            coachName: coachName,
+            weekNumber: document.getElementById('coach-week-number').value,
+            sessionDate: document.getElementById('coach-session-date').value,
+            progressStatus: document.getElementById('coach-progress-status').value,
+            areaOfConcern: document.getElementById('coach-area-of-concern').value,
+            rootCause: document.getElementById('coach-root-cause').value,
+            coachingTopic: document.getElementById('coach-coaching-topic').value,
+            actionsTaken: document.getElementById('coach-actions-taken').value,
+            agentFeedback: document.getElementById('coach-agent-feedback').value,
+            followUpPlan: document.getElementById('coach-follow-up-plan').value,
+            nextReviewDate: document.getElementById('coach-next-review-date').value,
+            qaInteractionID: document.getElementById('coach-qa-interaction-id').value,
+            qaScore: document.getElementById('coach-qa-score').value
+          };
+          
+          if (!coachingObject.sessionDate || !coachingObject.coachingTopic) {
+            throw new Error("Session Date and Coaching Topic are required fields.");
+          }
+
+          setStatus('coaching-status', 'processing', `Saving session for ${selectedName}...`);
+          
+          google.script.run
+            .withSuccessHandler(msg => {
+              if (msg.startsWith('Error:')) {
+                setStatus('coaching-status', 'error', msg.replace('Error: ', ''));
+              } else {
+                setStatus('coaching-status', 'success', msg);
+                document.getElementById('coaching-form').reset();
+                document.getElementById('coach-session-date').valueAsDate = new Date();
+                loadCoachingData(); // Refresh the history list
+              }
+            })
+            .withFailureHandler(err => {
+              setStatus('coaching-status', 'error', err.message);
+            })
+            .webSubmitCoaching(coachingObject);
+
+        } catch (err) {
+          setStatus('coaching-status', 'error', err.message);
+        }
+      }
+      
+      // --- END Coaching Functions ---
+
+
       // Initialize
       document.addEventListener("DOMContentLoaded", function() {
         loadUserInfo(); 
@@ -3276,7 +3625,8 @@
         document.getElementById('manual-punch-date').valueAsDate = new Date(); 
         document.getElementById('admin-leave-start-date').valueAsDate = new Date(); 
         document.getElementById('dashboard-date').valueAsDate = new Date();
-        toggleTimeFields(); // Initial call to set time fields correctly
+        document.getElementById('coach-session-date').valueAsDate = new Date();
+        toggleTimeFields();
       });
     </script>
   </body>
