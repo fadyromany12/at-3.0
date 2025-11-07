@@ -932,7 +932,8 @@
       }
 
       /* --- NEW: Custom Multi-Select Styles --- */
-      #dashboard-user-select-container {
+      /* Apply to both dashboard and history containers */
+      #dashboard-user-select-container, #history-user-select-container {
         position: relative; 
       }
 
@@ -1183,9 +1184,15 @@
         <div id="history-report-panel" class="tab-panel">
           <h2>Adherence History Report</h2>
           <form id="history-report-form" class="form-container">
-            <div class="form-group" id="history-user-select-group" style="display: none;">
-              <label for="history-user-select">Select User(s) (Ctrl+Click)</label>
-              <select id="history-user-select" multiple></select>
+            <!-- MODIFIED: Replaced standard select with custom multi-select structure -->
+            <div class="form-group" id="history-user-select-container" style="display: none;">
+              <label>Select User(s)</label>
+              <button type="button" id="custom-history-select-button" class="custom-select-button" onclick="toggleUserDropdown('history', event)">
+                Select Users (0 selected)
+              </button>
+              <div id="custom-history-select-dropdown" class="custom-select-dropdown" onclick="event.stopPropagation()">
+                <!-- Options will be dynamically populated here -->
+              </div>
             </div>
             <div class="form-group">
               <label for="history-start-date">Start Date</label>
@@ -1306,10 +1313,10 @@
               <!-- MODIFIED: Replaced select with custom multiselect component -->
               <div class="form-group" id="dashboard-user-select-container">
                 <label>Select Users</label>
-                <button type="button" id="custom-user-select-button" class="custom-select-button" onclick="toggleUserDropdown(event)">
+                <button type="button" id="custom-dashboard-select-button" class="custom-select-button" onclick="toggleUserDropdown('dashboard', event)">
                   Select Users (0 selected)
                 </button>
-                <div id="custom-user-select-dropdown" class="custom-select-dropdown" onclick="event.stopPropagation()">
+                <div id="custom-dashboard-select-dropdown" class="custom-select-dropdown" onclick="event.stopPropagation()">
                   <!-- Options will be dynamically populated here -->
                 </div>
               </div>
@@ -1392,9 +1399,12 @@
       let lastHistoryData = null;
       let chartsLoaded = false; 
       
-      // NEW: Global state for the custom multiselect
+      // NEW: Global state for the custom multiselects (Dashboard and History)
       let selectedDashboardUsers = {}; // Key: email, Value: name
       let dashboardUserList = []; // Copy of allUsersList for easy access
+      
+      let selectedHistoryUsers = {};
+      let historyUserList = [];
       
       // --- NEW/MODIFIED: Dark Mode Functions (Removed direct icon manipulation) ---
       const DARK_MODE_KEY = 'kap_dark_mode';
@@ -1595,7 +1605,10 @@
           document.getElementById('leave-approval-tab-button').style.display = 'inline-block';
           document.getElementById('admin-tools-tab-button').style.display = 'inline-block'; 
           document.getElementById('history-report-tab-button').style.display = 'inline-block'; 
-          document.getElementById('history-user-select-group').style.display = 'block'; 
+          
+          // MODIFIED: Show custom select container instead of old select group
+          document.getElementById('history-user-select-container').style.display = 'block'; 
+          
           document.getElementById('reporting-line-tab-button').style.display = 'inline-block';
           
           populateAdminDropdown(allUsersList, selfUserName, 'agent-select', 'Punch for: Myself');
@@ -1603,10 +1616,16 @@
           populateAdminDropdown(allUsersList, selfUserName, 'schedule-agent-select', 'Select a user');
           populateAdminDropdown(allUsersList, selfUserName, 'manual-punch-user', 'Select a user'); 
           populateAdminDropdown(allUsersList, selfUserName, 'admin-leave-user', 'Select user to submit for'); 
-          populateAdminDropdown(allUsersList, selfUserName, 'history-user-select', 'Select a user'); 
+          
+          // REMOVED: populateAdminDropdown for history-user-select
           populateAdminDropdown(allUsersList, selfUserName, 'balance-user-select', 'Select a user');
-          // MODIFIED: This now calls the function to setup the CUSTOM DROPDOWN
-          populateAdminDropdown(allUsersList, selfUserName, 'dashboard-user-select', 'Select users'); 
+          
+          // NEW: Setup Custom Dashboard Select
+          populateAdminCustomSelect(allUsersList, selfUserName, 'dashboard');
+          
+          // NEW: Setup Custom History Select
+          populateAdminCustomSelect(allUsersList, selfUserName, 'history');
+          
           populateAdminDropdown(allUsersList, selfUserName, 'reporting-line-user', 'Select a user');
           populateSupervisorDropdown(allAdminsList, 'reporting-line-supervisor');
           
@@ -1620,7 +1639,9 @@
         } else {
           // User is an agent
           document.getElementById('history-report-tab-button').style.display = 'inline-block'; 
-          document.getElementById('history-user-select-group').style.display = 'none'; 
+          
+          // MODIFIED: Hide custom select container for agents
+          document.getElementById('history-user-select-container').style.display = 'none'; 
         }
         
         loadMyRequests();
@@ -1645,10 +1666,12 @@
             populateUserInfo(user);
 
             if (user.role === 'admin' || user.role === 'superadmin') {
-              // Load saved team to pre-select dropdown
+              // Load saved team to pre-select dashboard dropdown
               google.script.run.withSuccessHandler(teamEmails => {
                 if (teamEmails && teamEmails.length > 0) {
-                  // Manually set the initial state of the custom dropdown
+                  // Manually set the initial state of the custom dashboard dropdown
+                  selectedDashboardUsers = {}; // Reset state before setting
+                  
                   teamEmails.forEach(email => {
                     const user = allUsersList.find(u => u.email === email);
                     if (user) {
@@ -1656,19 +1679,22 @@
                     }
                   });
                   // Apply selection state to the DOM elements
-                  const dropdownDiv = document.getElementById('custom-user-select-dropdown');
+                  const dropdownDiv = document.getElementById('custom-dashboard-select-dropdown');
                   if (dropdownDiv) {
                       dropdownDiv.querySelectorAll('.dropdown-item').forEach(item => {
                           const email = item.getAttribute('data-email');
+                          const checkbox = item.querySelector('input[type="checkbox"]');
                           if (selectedDashboardUsers[email]) {
                               item.classList.add('selected');
-                              const checkbox = item.querySelector('input[type="checkbox"]');
                               if (checkbox) checkbox.checked = true;
+                          } else {
+                             item.classList.remove('selected');
+                             if (checkbox) checkbox.checked = false;
                           }
                       });
                   }
                   // Update button display on load
-                  updateSelectButtonDisplay();
+                  updateSelectButtonDisplay('dashboard');
                 }
               }).webGetMyTeam(); 
             }
@@ -1681,20 +1707,29 @@
             infoDiv.classList.add('error', 'visible');
         }).getUserInfo(); 
       }
+      
+      // NEW: Function to handle populating custom multi-selects (Dashboard/History)
+      function populateAdminCustomSelect(users, selfName, type) { 
+          const isHistory = type === 'history';
+          const selectedState = isHistory ? selectedHistoryUsers : selectedDashboardUsers;
+          const dropdownDiv = document.getElementById(`custom-${type}-select-dropdown`);
+          
+          if (!dropdownDiv) return;
 
-      function populateAdminDropdown(users, selfName, dropdownId, selfText) { 
-        // --- CUSTOM DASHBOARD SELECT LOGIC ---
-        if (dropdownId === 'dashboard-user-select') {
-          dashboardUserList = users; // Store the full list
-          selectedDashboardUsers = {}; // Reset selection state
-          const dropdownDiv = document.getElementById('custom-user-select-dropdown');
+          // Set the global user list state for lookups
+          if (isHistory) {
+              historyUserList = users;
+          } else {
+              dashboardUserList = users;
+          }
+          
+          // Reset DOM
           dropdownDiv.innerHTML = ''; 
           
           // Add the "Select All" option
           let allOption = document.createElement('div');
           allOption.className = 'dropdown-item';
-          allOption.innerHTML = `<input type="checkbox" id="select-all-checkbox" onclick="toggleSelectAll()"> <label for="select-all-checkbox" style="flex: 1; cursor: pointer;">Select All</label>`;
-          // Prevent selecting the container from triggering item select logic
+          allOption.innerHTML = `<input type="checkbox" id="select-all-checkbox-${type}" onclick="toggleSelectAll('${type}')"> <label for="select-all-checkbox-${type}" style="flex: 1; cursor: pointer;">Select All</label>`;
           allOption.onclick = (e) => e.stopPropagation(); 
           dropdownDiv.appendChild(allOption);
           
@@ -1704,17 +1739,24 @@
             item.className = 'dropdown-item';
             item.setAttribute('data-email', user.email);
             item.innerHTML = `
-              <input type="checkbox" id="user-checkbox-${user.email}" data-email="${user.email}">
-              <label for="user-checkbox-${user.email}" style="flex: 1; cursor: pointer;">${user.name} (${user.email})</label>
+              <input type="checkbox" id="user-checkbox-${type}-${user.email}" data-email="${user.email}">
+              <label for="user-checkbox-${type}-${user.email}" style="flex: 1; cursor: pointer;">${user.name} (${user.email})</label>
             `;
             // Pass the item and email to the selection handler
-            item.onclick = (e) => selectUserItem(e, item, user.email, user.name);
+            item.onclick = (e) => selectUserItem(type, e, item, user.email, user.name);
             dropdownDiv.appendChild(item);
           });
-          updateSelectButtonDisplay();
-          return; // Stop here for custom select
+          
+          // Ensure button display reflects initial (empty) state
+          updateSelectButtonDisplay(type);
+      }
+      
+      // MODIFIED: Original function now skips custom select IDs
+      function populateAdminDropdown(users, selfName, dropdownId, selfText) { 
+        // Skip custom selects handled by populateAdminCustomSelect
+        if (dropdownId.includes('dashboard-user-select') || dropdownId.includes('history-user-select')) {
+             return;
         }
-        // --- END CUSTOM DASHBOARD SELECT LOGIC ---
 
         const select = document.getElementById(dropdownId);
         select.innerHTML = ''; 
@@ -2188,16 +2230,26 @@
         let targetUserNames = [];
         
         if (selfRole === 'admin' || selfRole === 'superadmin') {
-          const selectedOptions = document.getElementById('history-user-select').selectedOptions;
-          if (selectedOptions.length === 0) {
+          // MODIFIED: Use the new custom select function
+          const selectedEmails = getSelectedUsers('history'); 
+          const count = Object.keys(selectedHistoryUsers).length;
+          
+          if (selectedEmails.length === 1 && selectedEmails[0] === 'ALL_USERS') {
+            // If "ALL_USERS" is returned, default to all names from the list
+            targetUserNames = allUsersList.map(u => u.name);
+          } else if (count === 0 && selectedEmails[0] !== 'ALL_USERS') {
             setStatus('my-history-status', 'error', 'Please select at least one user to view.');
             return;
+          } else {
+            // Map selected emails to user names
+            targetUserNames = selectedEmails.map(email => {
+              const user = allUsersList.find(u => u.email === email);
+              return user ? user.name : null;
+            }).filter(name => name); // Filter out any nulls
           }
-          for (let option of selectedOptions) {
-            const user = allUsersList.find(u => u.email === option.value);
-            if (user) targetUserNames.push(user.name);
-          }
+          
         } else {
+          // Agent mode: always query for self
           targetUserNames.push(selfUserName);
         }
         
@@ -2529,9 +2581,10 @@
 
       // --- Dashboard Functions ---
       
-      // MODIFIED: Updated to use the new selectedDashboardUsers map
-      function getSelectedDashboardUsers() {
-        const userEmails = Object.keys(selectedDashboardUsers);
+      // NEW: Generalized function to get selected users based on type
+      function getSelectedUsers(type) {
+        const selectedState = type === 'history' ? selectedHistoryUsers : selectedDashboardUsers;
+        const userEmails = Object.keys(selectedState);
         
         if (userEmails.length === 0) {
           // If nothing is explicitly selected, the logic defaults to 'ALL_USERS' in the backend
@@ -2540,18 +2593,18 @@
         return userEmails;
       }
       
-      // NEW: Custom Select Functions
-      function toggleUserDropdown(event) {
+      // MODIFIED: Accepts a 'type' parameter
+      function toggleUserDropdown(type, event) {
           event.stopPropagation();
-          const dropdown = document.getElementById('custom-user-select-dropdown');
-          const button = document.getElementById('custom-user-select-button');
+          const dropdown = document.getElementById(`custom-${type}-select-dropdown`);
+          const button = document.getElementById(`custom-${type}-select-button`);
           const isVisible = dropdown.style.display === 'block';
 
           if (isVisible) {
               dropdown.style.display = 'none';
               button.classList.remove('active');
           } else {
-              // Hide all other dropdowns if any exist
+              // Hide all other dropdowns
               document.querySelectorAll('.custom-select-dropdown').forEach(d => d.style.display = 'none');
               document.querySelectorAll('.custom-select-button').forEach(b => b.classList.remove('active'));
               
@@ -2560,13 +2613,18 @@
               button.classList.add('active');
               
               // Ensure "Select All" checkbox reflects current state
-              const allChecked = Object.keys(selectedDashboardUsers).length === dashboardUserList.length && dashboardUserList.length > 0;
-              const selectAllCheckbox = document.getElementById('select-all-checkbox');
+              const isHistory = type === 'history';
+              const userListState = isHistory ? historyUserList : dashboardUserList;
+              const selectedState = isHistory ? selectedHistoryUsers : selectedDashboardUsers;
+              
+              const allChecked = Object.keys(selectedState).length === userListState.length && userListState.length > 0;
+              const selectAllCheckbox = document.getElementById(`select-all-checkbox-${type}`);
               if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
           }
       }
 
-      function selectUserItem(event, itemElement, userEmail, userName) {
+      // MODIFIED: Accepts a 'type' parameter
+      function selectUserItem(type, event, itemElement, userEmail, userName) {
           event.stopPropagation();
           const checkbox = itemElement.querySelector(`input[data-email="${userEmail}"]`);
           
@@ -2576,61 +2634,77 @@
               checkbox.checked = !checkbox.checked;
           }
           
-          // The event target's state might not be fully updated immediately,
-          // so we rely on the final state of the checkbox after the click event processes.
           const finalCheckedState = checkbox.checked;
+          const isHistory = type === 'history';
+          const selectedState = isHistory ? selectedHistoryUsers : selectedDashboardUsers;
+          const userListState = isHistory ? historyUserList : dashboardUserList;
 
           if (finalCheckedState) {
-              selectedDashboardUsers[userEmail] = userName;
+              selectedState[userEmail] = userName;
               itemElement.classList.add('selected');
           } else {
-              delete selectedDashboardUsers[userEmail];
+              delete selectedState[userEmail];
               itemElement.classList.remove('selected');
           }
           
           // Update the "Select All" checkbox state
-          const allChecked = Object.keys(selectedDashboardUsers).length === dashboardUserList.length && dashboardUserList.length > 0;
-          const selectAllCheckbox = document.getElementById('select-all-checkbox');
+          const allChecked = Object.keys(selectedState).length === userListState.length && userListState.length > 0;
+          const selectAllCheckbox = document.getElementById(`select-all-checkbox-${type}`);
           if (selectAllCheckbox) {
               selectAllCheckbox.checked = allChecked;
           }
 
-          updateSelectButtonDisplay();
+          updateSelectButtonDisplay(type);
       }
 
-      function toggleSelectAll() {
-          const selectAllChecked = document.getElementById('select-all-checkbox').checked;
-          const dropdown = document.getElementById('custom-user-select-dropdown');
+      // MODIFIED: Accepts a 'type' parameter
+      function toggleSelectAll(type) {
+          const selectAllChecked = document.getElementById(`select-all-checkbox-${type}`).checked;
+          const dropdown = document.getElementById(`custom-${type}-select-dropdown`);
+          const isHistory = type === 'history';
+          const selectedState = isHistory ? selectedHistoryUsers : selectedDashboardUsers;
+          const userListState = isHistory ? historyUserList : dashboardUserList;
+          
+          // Clear current state
+          Object.keys(selectedState).forEach(key => delete selectedState[key]);
           
           if (selectAllChecked) {
-              selectedDashboardUsers = {}; // Reset state before populating
-              dashboardUserList.forEach(user => {
-                  selectedDashboardUsers[user.email] = user.name;
+              // Populate state
+              userListState.forEach(user => {
+                  selectedState[user.email] = user.name;
               });
+              // Update UI
               dropdown.querySelectorAll('.dropdown-item').forEach(item => {
                   item.classList.add('selected');
                   const checkbox = item.querySelector('input[type="checkbox"]');
                   // Do not toggle the 'select all' checkbox itself
-                  if (checkbox && checkbox.id !== 'select-all-checkbox') checkbox.checked = true; 
+                  if (checkbox && checkbox.id !== `select-all-checkbox-${type}`) checkbox.checked = true; 
               });
           } else {
-              selectedDashboardUsers = {};
+              // Update UI
               dropdown.querySelectorAll('.dropdown-item').forEach(item => {
                   item.classList.remove('selected');
                   const checkbox = item.querySelector('input[type="checkbox"]');
-                   if (checkbox && checkbox.id !== 'select-all-checkbox') checkbox.checked = false;
+                   if (checkbox && checkbox.id !== `select-all-checkbox-${type}`) checkbox.checked = false;
               });
           }
-          updateSelectButtonDisplay();
+          updateSelectButtonDisplay(type);
       }
 
-      function updateSelectButtonDisplay() {
-          const button = document.getElementById('custom-user-select-button');
-          const count = Object.keys(selectedDashboardUsers).length;
+      // MODIFIED: Accepts a 'type' parameter
+      function updateSelectButtonDisplay(type) {
+          const button = document.getElementById(`custom-${type}-select-button`);
+          if (!button) return;
+          
+          const isHistory = type === 'history';
+          const selectedState = isHistory ? selectedHistoryUsers : selectedDashboardUsers;
+          const userListState = isHistory ? historyUserList : dashboardUserList;
+          
+          const count = Object.keys(selectedState).length;
           
           if (count === 0) {
               button.textContent = 'Select Users (0 selected)';
-          } else if (count === dashboardUserList.length && dashboardUserList.length > 0) {
+          } else if (count === userListState.length && userListState.length > 0) {
               button.textContent = `All Users Selected (${count})`;
           } else {
               button.textContent = `Selected: ${count} user(s)`;
@@ -2639,13 +2713,27 @@
       
       // Close dropdown when clicking outside
       document.addEventListener('click', function(event) {
-          const dropdown = document.getElementById('custom-user-select-dropdown');
-          const button = document.getElementById('custom-user-select-button');
-          const container = document.getElementById('dashboard-user-select-container');
           
-          if (dropdown && button && container && !container.contains(event.target)) {
-              dropdown.style.display = 'none';
-              button.classList.remove('active');
+          // --- Dashboard Logic ---
+          const dashboardDropdown = document.getElementById('custom-dashboard-select-dropdown');
+          const dashboardButton = document.getElementById('custom-dashboard-select-button');
+          if (dashboardDropdown && dashboardButton && dashboardDropdown.style.display === 'block') {
+              const container = document.getElementById('dashboard-user-select-container');
+              if (container && !container.contains(event.target)) {
+                  dashboardDropdown.style.display = 'none';
+                  dashboardButton.classList.remove('active');
+              }
+          }
+          
+          // --- History Logic (New) ---
+          const historyDropdown = document.getElementById('custom-history-select-dropdown');
+          const historyButton = document.getElementById('custom-history-select-button');
+          if (historyDropdown && historyButton && historyDropdown.style.display === 'block') {
+              const container = document.getElementById('history-user-select-container');
+              if (container && !container.contains(event.target)) {
+                  historyDropdown.style.display = 'none';
+                  historyButton.classList.remove('active');
+              }
           }
       });
 
@@ -2655,7 +2743,7 @@
           google.charts.setOnLoadCallback(loadDashboard);
           return;
         }
-        const userEmails = getSelectedDashboardUsers();
+        const userEmails = getSelectedUsers('dashboard'); // MODIFIED
         const date = document.getElementById('dashboard-date').value;
         
         if (!date) {
@@ -2666,7 +2754,9 @@
         if (userEmails.length === 1 && userEmails[0] === 'ALL_USERS') {
            document.getElementById('dashboard-title').innerText = `Full Team Dashboard for ${formatDate(date)}`;
         } else {
-           document.getElementById('dashboard-title').innerText = `Dashboard for ${Object.keys(selectedDashboardUsers).length} User(s) (${formatDate(date)})`;
+           // Use the actual number of selected users
+           const selectedCount = Object.keys(selectedDashboardUsers).length || userEmails.length;
+           document.getElementById('dashboard-title').innerText = `Dashboard for ${selectedCount} User(s) (${formatDate(date)})`;
         }
         
         setStatus('dashboard-status', 'processing', 'Loading dashboard data...');
@@ -2748,9 +2838,6 @@
              // which is primarily focused on deviations, not real-time status by user.
              // The original pie chart data provided the statuses, we will use that as an indicator,
              // though it's imperfect without direct user/status mapping from the backend.
-             
-             // Mocking the data flow by creating a user list from the total count/status breakdown
-             // and assigning the names from individualAdherenceMetrics for the actual metrics part.
              
              const allAgentNames = data.individualAdherenceMetrics.map(u => u.name);
              const statusDistribution = data.statusCounts.map(s => ({ status: s[0], count: s[1] }));
@@ -2856,7 +2943,7 @@
       }
       
       function saveMyTeam() {
-        const selectedUsers = getSelectedDashboardUsers();
+        const selectedUsers = getSelectedUsers('dashboard');
         
         if (selectedUsers.length === 1 && selectedUsers[0] === 'ALL_USERS') {
           setStatus('dashboard-status', 'error', 'No specific users selected to save as your team.');
@@ -2880,7 +2967,7 @@
         
         google.script.run
           .withSuccessHandler(teamEmails => {
-            const dropdown = document.getElementById('custom-user-select-dropdown');
+            const dropdown = document.getElementById('custom-dashboard-select-dropdown');
             
             // Reset state
             selectedDashboardUsers = {};
@@ -2908,16 +2995,16 @@
                       }
                   }
               });
-              updateSelectButtonDisplay();
+              updateSelectButtonDisplay('dashboard');
               setStatus('dashboard-status', 'success', 'Loaded "My Team". Click "Load Dashboard" to view.');
             } else {
-              updateSelectButtonDisplay();
+              updateSelectButtonDisplay('dashboard');
               setStatus('dashboard-status', 'success', 'No "My Team" saved. Select users and click "Load Dashboard".');
             }
             
             // Ensure "Select All" reflects the new selection
             const allChecked = Object.keys(selectedDashboardUsers).length === dashboardUserList.length && dashboardUserList.length > 0;
-            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const selectAllCheckbox = document.getElementById(`select-all-checkbox-dashboard`);
             if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
 
             if (!autoLoadDashboard) {
