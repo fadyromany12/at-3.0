@@ -633,7 +633,7 @@
 
       /* NEW: Dashboard Agent Status Styles */
       .status-Logged-In { background-color: var(--status-login); color: var(--status-login-text); }
-      .status-On-Break/Other { background-color: var(--status-break); color: var(--status-break-text); }
+      .status-On-Break-Other { background-color: var(--status-break); color: var(--status-break-text); }
       .status-On-Leave { background-color: var(--status-leave); color: var(--status-leave-text); }
       .status-Absent { background-color: var(--status-leave); color: var(--status-leave-text); }
       .status-Pending-Login { background-color: var(--status-pending); color: var(--status-pending-text); }
@@ -697,9 +697,9 @@
         min-width: 150px; 
         margin-bottom: 0;
       }
-      #history-user-select, #dashboard-user-select {
-        height: 120px;
-      }
+      
+      /* REMOVED: #history-user-select, #dashboard-user-select fixed heights */
+      
       #history-report-form button {
         width: auto;
         min-width: 150px;
@@ -931,6 +931,103 @@
         white-space: nowrap;
       }
 
+      /* --- NEW: Custom Multi-Select Styles --- */
+      #dashboard-user-select-container {
+        position: relative; 
+      }
+
+      .custom-select-button {
+        width: 100%;
+        padding: 12px;
+        font-size: 1em;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background-color: var(--input-bg);
+        color: var(--text-color);
+        text-align: left;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+        min-width: 150px;
+        margin: 0; 
+        box-shadow: none; 
+        transform: none; 
+      }
+      .custom-select-button:hover {
+        background-color: var(--page-bg);
+        border-color: var(--konecta-blue);
+      }
+
+      .custom-select-button::after {
+        content: '▼';
+        font-size: 0.7em;
+        transition: transform 0.2s;
+        color: var(--text-color-secondary);
+      }
+
+      .custom-select-button.active::after {
+        transform: rotate(180deg);
+      }
+
+      .custom-select-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 250px;
+        overflow-y: auto;
+        z-index: 50;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        display: none; /* Hidden by default */
+        margin-top: 5px;
+        padding: 5px 0;
+        /* Ensure dark mode colors apply */
+        color: var(--text-color);
+      }
+      
+      /* Make sure checkboxes/labels look good in dark mode */
+      .custom-select-dropdown input[type="checkbox"] {
+          margin-right: 10px;
+          cursor: pointer;
+          accent-color: var(--konecta-blue); /* Sets the checkbox color */
+          min-width: 18px;
+          min-height: 18px;
+      }
+      .custom-select-dropdown label {
+          color: var(--text-color);
+          margin-bottom: 0;
+      }
+
+      .dropdown-item {
+        padding: 8px 15px;
+        cursor: pointer;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .dropdown-item:hover {
+        background-color: var(--input-bg);
+      }
+
+      .dropdown-item.selected {
+        background-color: var(--konecta-blue);
+        color: white;
+        font-weight: 600;
+      }
+
+      .dropdown-item.selected:hover {
+        background-color: #008fbc; /* Slightly darker blue on hover */
+      }
+      .dropdown-item.selected label {
+        color: white;
+      }
+      /* --- END Custom Multi-Select Styles --- */
 
       /* --- Responsive Design --- */
       @media (max-width: 900px) {
@@ -1206,10 +1303,17 @@
           <h2 id="dashboard-title">Team Dashboard</h2>
           <div id="dashboard-controls" class="form-container">
             <form id="dashboard-form">
-              <div class="form-group">
-                <label for="dashboard-user-select">Select Users (Ctrl+Click)</label>
-                <select id="dashboard-user-select" multiple></select>
+              <!-- MODIFIED: Replaced select with custom multiselect component -->
+              <div class="form-group" id="dashboard-user-select-container">
+                <label>Select Users</label>
+                <button type="button" id="custom-user-select-button" class="custom-select-button" onclick="toggleUserDropdown(event)">
+                  Select Users (0 selected)
+                </button>
+                <div id="custom-user-select-dropdown" class="custom-select-dropdown" onclick="event.stopPropagation()">
+                  <!-- Options will be dynamically populated here -->
+                </div>
               </div>
+              
               <div class="form-group">
                 <label for="dashboard-date">Select Date</label>
                 <input type="date" id="dashboard-date" required>
@@ -1287,6 +1391,10 @@
       let allAdminsList = []; 
       let lastHistoryData = null;
       let chartsLoaded = false; 
+      
+      // NEW: Global state for the custom multiselect
+      let selectedDashboardUsers = {}; // Key: email, Value: name
+      let dashboardUserList = []; // Copy of allUsersList for easy access
       
       // --- NEW/MODIFIED: Dark Mode Functions (Removed direct icon manipulation) ---
       const DARK_MODE_KEY = 'kap_dark_mode';
@@ -1497,6 +1605,7 @@
           populateAdminDropdown(allUsersList, selfUserName, 'admin-leave-user', 'Select user to submit for'); 
           populateAdminDropdown(allUsersList, selfUserName, 'history-user-select', 'Select a user'); 
           populateAdminDropdown(allUsersList, selfUserName, 'balance-user-select', 'Select a user');
+          // MODIFIED: This now calls the function to setup the CUSTOM DROPDOWN
           populateAdminDropdown(allUsersList, selfUserName, 'dashboard-user-select', 'Select users'); 
           populateAdminDropdown(allUsersList, selfUserName, 'reporting-line-user', 'Select a user');
           populateSupervisorDropdown(allAdminsList, 'reporting-line-supervisor');
@@ -1536,16 +1645,30 @@
             populateUserInfo(user);
 
             if (user.role === 'admin' || user.role === 'superadmin') {
-              // Load saved team to pre-select dropdown (but don't load the chart yet)
+              // Load saved team to pre-select dropdown
               google.script.run.withSuccessHandler(teamEmails => {
                 if (teamEmails && teamEmails.length > 0) {
-                  const select = document.getElementById('dashboard-user-select');
-                  Array.from(select.options).forEach(option => {
-                    option.selected = teamEmails.includes(option.value);
+                  // Manually set the initial state of the custom dropdown
+                  teamEmails.forEach(email => {
+                    const user = allUsersList.find(u => u.email === email);
+                    if (user) {
+                        selectedDashboardUsers[user.email] = user.name;
+                    }
                   });
-                  // Auto load dashboard only if it's the first admin/superadmin view
-                  // This relies on the default tab being 'punch', which it is.
-                  // We can't tell if the user has navigated back, so we'll skip auto-loading for simplicity after a DOMContentLoaded event.
+                  // Apply selection state to the DOM elements
+                  const dropdownDiv = document.getElementById('custom-user-select-dropdown');
+                  if (dropdownDiv) {
+                      dropdownDiv.querySelectorAll('.dropdown-item').forEach(item => {
+                          const email = item.getAttribute('data-email');
+                          if (selectedDashboardUsers[email]) {
+                              item.classList.add('selected');
+                              const checkbox = item.querySelector('input[type="checkbox"]');
+                              if (checkbox) checkbox.checked = true;
+                          }
+                      });
+                  }
+                  // Update button display on load
+                  updateSelectButtonDisplay();
                 }
               }).webGetMyTeam(); 
             }
@@ -1560,6 +1683,39 @@
       }
 
       function populateAdminDropdown(users, selfName, dropdownId, selfText) { 
+        // --- CUSTOM DASHBOARD SELECT LOGIC ---
+        if (dropdownId === 'dashboard-user-select') {
+          dashboardUserList = users; // Store the full list
+          selectedDashboardUsers = {}; // Reset selection state
+          const dropdownDiv = document.getElementById('custom-user-select-dropdown');
+          dropdownDiv.innerHTML = ''; 
+          
+          // Add the "Select All" option
+          let allOption = document.createElement('div');
+          allOption.className = 'dropdown-item';
+          allOption.innerHTML = `<input type="checkbox" id="select-all-checkbox" onclick="toggleSelectAll()"> <label for="select-all-checkbox" style="flex: 1; cursor: pointer;">Select All</label>`;
+          // Prevent selecting the container from triggering item select logic
+          allOption.onclick = (e) => e.stopPropagation(); 
+          dropdownDiv.appendChild(allOption);
+          
+          // Add individual user options
+          users.forEach(user => { 
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.setAttribute('data-email', user.email);
+            item.innerHTML = `
+              <input type="checkbox" id="user-checkbox-${user.email}" data-email="${user.email}">
+              <label for="user-checkbox-${user.email}" style="flex: 1; cursor: pointer;">${user.name} (${user.email})</label>
+            `;
+            // Pass the item and email to the selection handler
+            item.onclick = (e) => selectUserItem(e, item, user.email, user.name);
+            dropdownDiv.appendChild(item);
+          });
+          updateSelectButtonDisplay();
+          return; // Stop here for custom select
+        }
+        // --- END CUSTOM DASHBOARD SELECT LOGIC ---
+
         const select = document.getElementById(dropdownId);
         select.innerHTML = ''; 
         
@@ -2090,7 +2246,7 @@
           if (!value || value === 'No' || value === 0) return '0';
           const seconds = parseInt(value, 10);
           if (seconds > 0) {
-              const color = isPositive ? 'var(--google-green)' : '#ea4335';
+              const color = isPositive ? '#34a853' : '#ea4335';
               return `<span style="font-weight: 600; color: ${color};">${formatSeconds(seconds)}</span>`;
           }
           return '0';
@@ -2372,14 +2528,127 @@
       }
 
       // --- Dashboard Functions ---
+      
+      // MODIFIED: Updated to use the new selectedDashboardUsers map
       function getSelectedDashboardUsers() {
-        const select = document.getElementById('dashboard-user-select');
-        const selectedUsers = Array.from(select.selectedOptions).map(opt => opt.value);
-        if (selectedUsers.length === 0) {
+        const userEmails = Object.keys(selectedDashboardUsers);
+        
+        if (userEmails.length === 0) {
+          // If nothing is explicitly selected, the logic defaults to 'ALL_USERS' in the backend
           return ['ALL_USERS'];
         }
-        return selectedUsers;
+        return userEmails;
       }
+      
+      // NEW: Custom Select Functions
+      function toggleUserDropdown(event) {
+          event.stopPropagation();
+          const dropdown = document.getElementById('custom-user-select-dropdown');
+          const button = document.getElementById('custom-user-select-button');
+          const isVisible = dropdown.style.display === 'block';
+
+          if (isVisible) {
+              dropdown.style.display = 'none';
+              button.classList.remove('active');
+          } else {
+              // Hide all other dropdowns if any exist
+              document.querySelectorAll('.custom-select-dropdown').forEach(d => d.style.display = 'none');
+              document.querySelectorAll('.custom-select-button').forEach(b => b.classList.remove('active'));
+              
+              // Show this one
+              dropdown.style.display = 'block';
+              button.classList.add('active');
+              
+              // Ensure "Select All" checkbox reflects current state
+              const allChecked = Object.keys(selectedDashboardUsers).length === dashboardUserList.length && dashboardUserList.length > 0;
+              const selectAllCheckbox = document.getElementById('select-all-checkbox');
+              if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
+          }
+      }
+
+      function selectUserItem(event, itemElement, userEmail, userName) {
+          event.stopPropagation();
+          const checkbox = itemElement.querySelector(`input[data-email="${userEmail}"]`);
+          
+          // Check if the click target was the checkbox/label
+          if (event.target !== checkbox && event.target.tagName !== 'LABEL') {
+               // If clicking the background, manually toggle the checkbox state
+              checkbox.checked = !checkbox.checked;
+          }
+          
+          // The event target's state might not be fully updated immediately,
+          // so we rely on the final state of the checkbox after the click event processes.
+          const finalCheckedState = checkbox.checked;
+
+          if (finalCheckedState) {
+              selectedDashboardUsers[userEmail] = userName;
+              itemElement.classList.add('selected');
+          } else {
+              delete selectedDashboardUsers[userEmail];
+              itemElement.classList.remove('selected');
+          }
+          
+          // Update the "Select All" checkbox state
+          const allChecked = Object.keys(selectedDashboardUsers).length === dashboardUserList.length && dashboardUserList.length > 0;
+          const selectAllCheckbox = document.getElementById('select-all-checkbox');
+          if (selectAllCheckbox) {
+              selectAllCheckbox.checked = allChecked;
+          }
+
+          updateSelectButtonDisplay();
+      }
+
+      function toggleSelectAll() {
+          const selectAllChecked = document.getElementById('select-all-checkbox').checked;
+          const dropdown = document.getElementById('custom-user-select-dropdown');
+          
+          if (selectAllChecked) {
+              selectedDashboardUsers = {}; // Reset state before populating
+              dashboardUserList.forEach(user => {
+                  selectedDashboardUsers[user.email] = user.name;
+              });
+              dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                  item.classList.add('selected');
+                  const checkbox = item.querySelector('input[type="checkbox"]');
+                  // Do not toggle the 'select all' checkbox itself
+                  if (checkbox && checkbox.id !== 'select-all-checkbox') checkbox.checked = true; 
+              });
+          } else {
+              selectedDashboardUsers = {};
+              dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                  item.classList.remove('selected');
+                  const checkbox = item.querySelector('input[type="checkbox"]');
+                   if (checkbox && checkbox.id !== 'select-all-checkbox') checkbox.checked = false;
+              });
+          }
+          updateSelectButtonDisplay();
+      }
+
+      function updateSelectButtonDisplay() {
+          const button = document.getElementById('custom-user-select-button');
+          const count = Object.keys(selectedDashboardUsers).length;
+          
+          if (count === 0) {
+              button.textContent = 'Select Users (0 selected)';
+          } else if (count === dashboardUserList.length && dashboardUserList.length > 0) {
+              button.textContent = `All Users Selected (${count})`;
+          } else {
+              button.textContent = `Selected: ${count} user(s)`;
+          }
+      }
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(event) {
+          const dropdown = document.getElementById('custom-user-select-dropdown');
+          const button = document.getElementById('custom-user-select-button');
+          const container = document.getElementById('dashboard-user-select-container');
+          
+          if (dropdown && button && container && !container.contains(event.target)) {
+              dropdown.style.display = 'none';
+              button.classList.remove('active');
+          }
+      });
+
 
       function loadDashboard() {
         if (!chartsLoaded) {
@@ -2397,7 +2666,7 @@
         if (userEmails.length === 1 && userEmails[0] === 'ALL_USERS') {
            document.getElementById('dashboard-title').innerText = `Full Team Dashboard for ${formatDate(date)}`;
         } else {
-           document.getElementById('dashboard-title').innerText = `Dashboard for ${userEmails.length} User(s) (${formatDate(date)})`;
+           document.getElementById('dashboard-title').innerText = `Dashboard for ${Object.keys(selectedDashboardUsers).length} User(s) (${formatDate(date)})`;
         }
         
         setStatus('dashboard-status', 'processing', 'Loading dashboard data...');
@@ -2469,10 +2738,6 @@
         const statusAgentDiv = document.getElementById('status-agent-list');
         let statusHtml = '';
         
-        // Map status counts array to a list of users/statuses (Note: Status Counts array doesn't contain user names, need to adapt)
-        // We will mock the list for now until the backend provides user-level status.
-        // For a more accurate mock, we will derive a list of mock users from the adherence details.
-
         if (data.individualAdherenceMetrics.length === 0 && data.statusCounts.length === 0) {
              statusHtml = '<p class="text-color-secondary">No user status information available.</p>';
         } else {
@@ -2483,10 +2748,6 @@
              // which is primarily focused on deviations, not real-time status by user.
              // The original pie chart data provided the statuses, we will use that as an indicator,
              // though it's imperfect without direct user/status mapping from the backend.
-             
-             // Since the direct user status list is not available in the API response,
-             // we rely on the overall status breakdown for a list demo. 
-             // In a real application, the backend should provide data.userStatuses: [{name: "Name", status: "Status"}]
              
              // Mocking the data flow by creating a user list from the total count/status breakdown
              // and assigning the names from individualAdherenceMetrics for the actual metrics part.
@@ -2595,11 +2856,10 @@
       }
       
       function saveMyTeam() {
-        const select = document.getElementById('dashboard-user-select');
-        const selectedUsers = Array.from(select.selectedOptions).map(opt => opt.value);
+        const selectedUsers = getSelectedDashboardUsers();
         
-        if (selectedUsers.length === 0) {
-          setStatus('dashboard-status', 'error', 'Please select at least one user to save as your team.');
+        if (selectedUsers.length === 1 && selectedUsers[0] === 'ALL_USERS') {
+          setStatus('dashboard-status', 'error', 'No specific users selected to save as your team.');
           return;
         }
         
@@ -2620,20 +2880,46 @@
         
         google.script.run
           .withSuccessHandler(teamEmails => {
-            const select = document.getElementById('dashboard-user-select');
+            const dropdown = document.getElementById('custom-user-select-dropdown');
+            
+            // Reset state
+            selectedDashboardUsers = {};
+            const allItems = dropdown.querySelectorAll('.dropdown-item:not(:first-child)');
+            
+            allItems.forEach(item => {
+                item.classList.remove('selected');
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (checkbox) checkbox.checked = false;
+            });
+
             if (teamEmails && teamEmails.length > 0) {
-              Array.from(select.options).forEach(option => {
-                option.selected = teamEmails.includes(option.value);
+              // Re-select based on saved teamEmails
+              teamEmails.forEach(email => {
+                  const item = dropdown.querySelector(`div[data-email="${email}"]`);
+                  if (item) {
+                      item.classList.add('selected');
+                      const checkbox = item.querySelector('input[type="checkbox"]');
+                      if (checkbox) checkbox.checked = true;
+                      
+                      // Re-populate global state
+                      const user = dashboardUserList.find(u => u.email === email);
+                      if (user) {
+                          selectedDashboardUsers[user.email] = user.name;
+                      }
+                  }
               });
+              updateSelectButtonDisplay();
               setStatus('dashboard-status', 'success', 'Loaded "My Team". Click "Load Dashboard" to view.');
             } else {
-              // If no team is saved, select nothing (which defaults to 'ALL_USERS' in loadDashboard logic)
-              Array.from(select.options).forEach(option => {
-                option.selected = false;
-              });
+              updateSelectButtonDisplay();
               setStatus('dashboard-status', 'success', 'No "My Team" saved. Select users and click "Load Dashboard".');
             }
             
+            // Ensure "Select All" reflects the new selection
+            const allChecked = Object.keys(selectedDashboardUsers).length === dashboardUserList.length && dashboardUserList.length > 0;
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
+
             if (!autoLoadDashboard) {
               loadDashboard();
             }
