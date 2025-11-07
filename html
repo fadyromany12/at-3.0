@@ -21,19 +21,22 @@
         --konecta-blue: #00a9e0;
         --konecta-dark: #2101cd; 
         --konecta-yellow: #f0fa00; 
+        
+        /* Hint of Superadmin color for Admin/Superadmin elements, slightly toned down */
+        --role-admin-header: #3b1f9b; 
+        --role-admin-text: white; 
 
         /* Core UI - LIGHT MODE */
-        /* CHANGE 1: Swapped primary text color from Konecta Blue (#2101cd) to a soft black (#212121) */
         --text-color: #212121; 
-        --text-color-secondary: #5f6368; /* Google Gray for secondary/hint text */
-        --page-bg: #f4f7f6; /* Light White/Grey */
+        --text-color-secondary: #5f6368; 
+        --page-bg: #f4f7f6; 
         --card-bg: #ffffff;
         --border-color: #e0e0e0;
         --input-bg: #f8f9fa;
         --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         --radius: 12px;
 
-        /* Role Colors (User-Defined) */
+        /* Role Colors (User-Defined) - Simplified to just use for badge backgrounds */
         --role-user-bg: #f4f7f6; 
         --role-admin-bg: #f0fa00;
         --role-superadmin-bg: #2101cd;
@@ -51,13 +54,16 @@
         
         /* Adjusting role backgrounds for dark mode visibility */
         --role-user-bg: #252525; 
-        --role-admin-bg: #a1a600; /* Muted Yellow */
-        --role-superadmin-bg: #0d015c; /* Muted Dark Blue */
+        --role-admin-bg: #a1a600; 
+        --role-superadmin-bg: #0d015c; 
+        --role-admin-header: #0d015c;
+        --role-admin-text: #f4f7f6;
       }
       
       /* --- Global Transitions and Font --- */
       * {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth Material Design-like curve */
+        /* Set smooth transition for everything for the "advanced" feel */
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
       }
       
       body, html {
@@ -65,61 +71,47 @@
         margin: 0; 
         padding: 0;
         background-color: var(--page-bg);
-        color: var(--text-color);
+        color: var(--text-color); 
       }
       
       h1, h2, h3, h4, strong {
-        color: var(--text-color);
+        color: var(--text-color); 
       }
       
-      /* --- Role-Based Body Background (The Revolution!) --- */
-      body[data-role="agent"] main, body[data-role="agent"] header {
-          background-color: var(--card-bg); /* Use standard card BG for user role area */
+      /* --- Role-Based Customization (Simplified) --- */
+      /* All main content uses standard light/dark theme colors */
+      
+      body[data-role="admin"] header,
+      body[data-role="superadmin"] header {
+        background-color: var(--role-admin-header); /* Hint of Superadmin color */
+        border-color: var(--role-admin-header);
+      }
+      body[data-role="admin"] header #logo-container,
+      body[data-role="superadmin"] header #logo-container {
+        border-color: var(--role-admin-header);
+      }
+      body[data-role="admin"] #admin-panel,
+      body[data-role="superadmin"] #admin-panel {
+        background-color: var(--role-admin-header);
+        color: var(--role-admin-text);
+        border-color: var(--role-admin-header);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+      body[data-role="admin"] #admin-panel label,
+      body[data-role="superadmin"] #admin-panel label {
+        color: var(--role-admin-text);
       }
 
-      body[data-role="admin"] header {
-        background-color: var(--role-admin-bg);
-        border-color: var(--role-admin-bg);
-      }
-      body[data-role="admin"] header h1, body[data-role="admin"] header .header-kap {
-        color: black;
-      }
-      body[data-role="admin"] main {
-        border: 2px solid var(--role-admin-bg);
-      }
-      body[data-role="admin"] #admin-panel {
-        background-color: var(--role-admin-bg);
-        border-color: var(--role-admin-bg);
-        color: black;
-        box-shadow: 0 4px 10px rgba(var(--role-admin-bg), 0.3);
-      }
-      
-      body[data-role="superadmin"] header {
-        background-color: var(--role-superadmin-bg);
-        border-color: var(--role-superadmin-bg);
-      }
-      body[data-role="superadmin"] header h1, body[data-role="superadmin"] header .header-kap {
-        color: white;
-      }
-      body[data-role="superadmin"] main {
-        border: 2px solid var(--role-superadmin-bg);
-      }
-      body[data-role="superadmin"] #admin-panel {
-        background-color: var(--role-superadmin-bg);
-        border-color: var(--role-superadmin-bg);
-        color: white;
-        box-shadow: 0 4px 10px rgba(var(--role-superadmin-bg), 0.3);
-      }
 
       /* --- Header with Logo and Dark Mode Button --- */
       header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 15px 30px;
+        padding: 20px 30px; 
         background-color: var(--card-bg);
         border-bottom: 2px solid var(--border-color);
-        position: sticky; /* Keep it visible */
+        position: sticky; 
         top: 0;
         z-index: 100;
       }
@@ -128,31 +120,34 @@
         align-items: center;
         gap: 15px;
       }
-      header img {
-        height: 30px;
-        width: auto;
-      }
-      header h1 { 
-        color: var(--text-color);
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin: 0;
-        display: flex;
-        align-items: center;
-      }
       
-      .header-kap {
-        color: var(--konecta-blue);
-        font-weight: 700;
-        margin-left: 5px;
+      /* NEW: Logo Container Styling (Bordered Cool Rectangle) */
+      #logo-container {
+          padding: 10px 15px;
+          background-color: var(--card-bg); 
+          border: 2px solid var(--konecta-blue);
+          border-radius: var(--radius);
+          box-shadow: 0 4px 15px rgba(0, 169, 224, 0.2); 
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+          cursor: pointer;
       }
+      #logo-container:hover {
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 8px 20px rgba(0, 169, 224, 0.4);
+      }
+      #konecta-logo {
+        height: 40px; 
+        width: auto;
+        transition: none;
+      }
+
       
       /* --- Dark Mode & Refresh Buttons --- */
       #header-refresh-button, #dark-mode-button {
         background: var(--input-bg);
         border: 1px solid var(--border-color);
         cursor: pointer;
-        padding: 8px;
+        padding: 10px; 
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -161,14 +156,13 @@
       }
       #header-refresh-button:hover, #dark-mode-button:hover {
         opacity: 0.9;
-        transform: scale(1.05);
+        transform: scale(1.1); 
         background-color: var(--page-bg);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       }
       #header-refresh-button img, #dark-mode-button img {
         width: 18px;
         height: 18px;
-        /* The filter is handled by JS on theme change */
       }
       #header-refresh-button.loading img {
         animation: spin 1s linear infinite;
@@ -186,6 +180,17 @@
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         overflow: hidden;
+        /* Removed role-based borders on main content */
+      }
+      
+      /* --- Enhanced Card/Item Animations (Advanced Feel) --- */
+      .dashboard-card, .request-list-item, #agent-info, #admin-panel {
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+        position: relative;
+      }
+      .dashboard-card:hover, .request-list-item:hover {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); 
+        transform: translateY(-4px); 
       }
       
       /* --- Tab Navigation --- */
@@ -193,8 +198,8 @@
         border-bottom: 1px solid var(--border-color);
         padding-top: 10px;
         display: flex;
-        justify-content: flex-start; /* Align left */
-        overflow-x: auto; /* Allow horizontal scroll on mobile */
+        justify-content: flex-start; 
+        overflow-x: auto; 
         padding-left: 30px;
         background-color: var(--card-bg);
       }
@@ -208,7 +213,7 @@
         border-bottom: 3px solid transparent;
         transition: all 0.3s ease;
         color: var(--text-color-secondary);
-        white-space: nowrap; /* Prevent wrapping */
+        white-space: nowrap; 
       }
       .tab-button:hover {
         background-color: var(--input-bg);
@@ -245,7 +250,6 @@
         text-align: center;
         font-size: 1.1em;
         position: relative; 
-        transition: all 0.3s ease;
       }
       
       #admin-panel {
@@ -257,7 +261,6 @@
         margin-bottom: 20px;
         text-align: center;
         font-weight: 500;
-        transition: all 0.3s ease;
       }
       #admin-panel label {
         font-weight: 600;
@@ -300,14 +303,14 @@
         background-color: var(--konecta-blue);
         color: white;
         letter-spacing: 0.5px;
-        box-shadow: 0 4px 10px rgba(0, 169, 224, 0.3); /* Blue shadow */
+        box-shadow: 0 4px 10px rgba(0, 169, 224, 0.3); 
         transition: all 0.2s ease-out; 
         min-width: 160px;
       }
       button:hover {
         background-color: #008fbc;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(0, 169, 224, 0.4);
+        transform: translateY(-3px) scale(1.02); 
+        box-shadow: 0 8px 18px rgba(0, 169, 224, 0.5); 
       }
       
       #other-buttons button {
@@ -316,8 +319,8 @@
       }
        #other-buttons button:hover {
         background-color: #3c4043;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(95, 99, 104, 0.3);
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 8px 18px rgba(95, 99, 104, 0.4);
       }
       
       .button-group {
@@ -401,7 +404,7 @@
         display: block;
         font-weight: 500;
         margin-bottom: 8px;
-        color: var(--text-color-secondary); /* Calm font color for labels */
+        color: var(--text-color-secondary); 
       }
       .form-group select, .form-group input, .form-group textarea {
         width: 100%;
@@ -415,7 +418,6 @@
         font-family: 'Inter', Arial, sans-serif;
       }
       .form-group input[type="date"], .form-group input[type="time"] {
-        /* Fixes date/time text alignment in some browsers in dark mode */
         color-scheme: var(--dark-mode-scheme, light); 
       }
       body.dark-mode {
@@ -488,11 +490,6 @@
         display: flex;
         align-items: flex-start;
         gap: 15px;
-        transition: all 0.3s ease;
-      }
-      .request-list-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       }
       
       .request-list-item .item-details {
@@ -695,6 +692,20 @@
         min-height: 250px;
         overflow-y: auto;
       }
+      
+      /* Dashboard Table Column Width Fix */
+      #adherence-detail-table .report-table {
+          table-layout: fixed;
+          width: 100%;
+      }
+      /* Column 2 is the 'User' name (after the default Google Charts Row Number column) */
+      #adherence-detail-table .report-table th:nth-child(2),
+      #adherence-detail-table .report-table td:nth-child(2) {
+          width: 25%; /* Restricting width of the User column */
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+      }
 
       /* --- Section divider --- */
       .section-divider {
@@ -746,20 +757,22 @@
   </head>
   <body>
     <header>
-      <img src="https://th.bing.com/th/id/OIP.gafgWpiLoUVHSxGah643xQHaCa?w=338&h=114&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3" alt="Konecta Logo">
+      <!-- NEW: Logo wrapped in container for border/shadow effect -->
+      <div id="logo-container">
+        <img id="konecta-logo" 
+             src="https://www.theinnovationgroup.it/wp-content/uploads/2025/02/180225_LogoKonecta_425x200.jpg" 
+             alt="Konecta Logo">
+      </div>
       <div class="header-controls">
-        <h1>
-          KAP
-        </h1>
-        <!-- Dark Mode Toggle: Uses Moon for Dark and Sun for Light -->
+        <!-- Dark Mode Toggle: Uses Sun for Light and Moon for Dark -->
         <button id="dark-mode-button" title="Toggle Dark Mode" onclick="toggleDarkMode()">
-           <!-- CHANGE 2: Kept standard sun/moon SVGs as they are clearest for dark mode toggles -->
-          <img id="dark-mode-icon" src="https://www.svgrepo.com/show/396652/sun.svg" alt="Theme Icon">
+           <!-- Icon source remains correct for Sun/Moon toggle -->
+          <img id="dark-mode-icon" src="https://downloadr2.apkmirror.com/wp-content/uploads/2019/10/5db102cb08750-384x384.png" alt="Theme Icon">
         </button>
         <!-- Header Refresh Button -->
         <button id="header-refresh-button" title="Refresh Data" onclick="refreshCurrentData()">
-          <!-- CHANGE 3: Updated image source to the requested PNG icon -->
-          <img id="refresh-icon" src="https://icons.veryicon.com/png/o/miscellaneous/two-color-webpage-small-icon/refresh-174.png" alt="Refresh Icon">
+          <!-- Icon source remains correct for Refresh icon -->
+          <img id="refresh-icon" src="https://cdn-icons-png.flaticon.com/512/560/560512.png" alt="Refresh Icon">
         </button>
       </div>
     </header>
@@ -1043,26 +1056,37 @@
       
       // --- NEW: Dark Mode Functions ---
       const DARK_MODE_KEY = 'kap_dark_mode';
+      
+      // Icon sources
+      const SUN_ICON = "https://www.svgrepo.com/show/396652/sun.svg";
+      const MOON_ICON = "https://www.svgrepo.com/show/532395/moon.svg";
+      const REFRESH_ICON = "https://icons.veryicon.com/png/o/miscellaneous/two-color-webpage-small-icon/refresh-174.png";
 
       function applyTheme(isDark) {
         const body = document.body;
         const icon = document.getElementById('dark-mode-icon');
+        const allIcons = document.querySelectorAll('#header-refresh-button img, #dark-mode-button img');
         
         if (isDark) {
           body.classList.add('dark-mode');
           body.setAttribute('data-theme', 'dark');
-          if (icon) icon.src = "https://www.svgrepo.com/show/532395/moon.svg"; // CHANGE 2: Moon icon
-          // Invert all icons in dark mode
-          document.querySelectorAll('#header-refresh-button img, #dark-mode-button img').forEach(img => {
+          if (icon) icon.src = MOON_ICON; // Update icon to MOON
+          
+          // Invert all non-theme icons in dark mode
+          allIcons.forEach(img => {
             if (img.id !== 'dark-mode-icon') {
               img.style.filter = 'invert(100%)';
             }
           });
+          // Refresh icon needs to be forced to 'none' if it's the specific PNG which is already color-appropriate
+          document.getElementById('refresh-icon').style.filter = 'none'; 
+
         } else {
           body.classList.remove('dark-mode');
           body.setAttribute('data-theme', 'light');
-          if (icon) icon.src = "https://www.svgrepo.com/show/396652/sun.svg"; // CHANGE 2: Sun icon
-          document.querySelectorAll('#header-refresh-button img, #dark-mode-button img').forEach(img => {
+          if (icon) icon.src = SUN_ICON; // Update icon to SUN
+          
+          allIcons.forEach(img => {
              img.style.filter = 'none';
           });
         }
