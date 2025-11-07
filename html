@@ -5,9 +5,9 @@
     <title>Konecta Adherence Portal (KAP)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Using Inter, a calm and highly legible font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- UPDATED: Modern Google Charts Loader -->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
       google.charts.load('current', {'packages':['corechart', 'table']});
@@ -17,52 +17,126 @@
     <style>
       /* --- Color Palette & Variables --- */
       :root {
+        /* Konecta Branding */
         --konecta-blue: #00a9e0;
-        /* UPDATED: User's new Dark Blue */
         --konecta-dark: #2101cd; 
-        /* UPDATED: User's new Yellow/Lime */
         --konecta-yellow: #f0fa00; 
-        /* Kept original gray for text readability */
-        --konecta-gray: #5f6368; 
-        --google-green: #34a853;
-        --google-red: #ea4335;
+
+        /* Core UI - LIGHT MODE */
+        /* CHANGE 1: Swapped primary text color from Konecta Blue (#2101cd) to a soft black (#212121) */
+        --text-color: #212121; 
+        --text-color-secondary: #5f6368; /* Google Gray for secondary/hint text */
+        --page-bg: #f4f7f6; /* Light White/Grey */
         --card-bg: #ffffff;
-        --page-bg: #f4f7f6;
-        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        --radius: 12px;
         --border-color: #e0e0e0;
+        --input-bg: #f8f9fa;
+        --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        --radius: 12px;
+
+        /* Role Colors (User-Defined) */
+        --role-user-bg: #f4f7f6; 
+        --role-admin-bg: #f0fa00;
+        --role-superadmin-bg: #2101cd;
+      }
+
+      /* DARK MODE OVERRIDES */
+      body.dark-mode {
+        --text-color: #f4f7f6;
+        --text-color-secondary: #b0b0b0;
+        --page-bg: #1e1e1e;
+        --card-bg: #2d2d2d;
+        --border-color: #444444;
+        --input-bg: #3c3c3c;
+        --shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        
+        /* Adjusting role backgrounds for dark mode visibility */
+        --role-user-bg: #252525; 
+        --role-admin-bg: #a1a600; /* Muted Yellow */
+        --role-superadmin-bg: #0d015c; /* Muted Dark Blue */
       }
       
-      /* --- Global Styles --- */
+      /* --- Global Transitions and Font --- */
+      * {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth Material Design-like curve */
+      }
+      
       body, html {
-        font-family: 'Inter', Arial, sans-serif; 
+        font-family: 'Inter', Arial, sans-serif;
         margin: 0; 
         padding: 0;
         background-color: var(--page-bg);
-        color: var(--konecta-dark);
+        color: var(--text-color);
+      }
+      
+      h1, h2, h3, h4, strong {
+        color: var(--text-color);
+      }
+      
+      /* --- Role-Based Body Background (The Revolution!) --- */
+      body[data-role="agent"] main, body[data-role="agent"] header {
+          background-color: var(--card-bg); /* Use standard card BG for user role area */
       }
 
-      /* --- Header with Logo --- */
+      body[data-role="admin"] header {
+        background-color: var(--role-admin-bg);
+        border-color: var(--role-admin-bg);
+      }
+      body[data-role="admin"] header h1, body[data-role="admin"] header .header-kap {
+        color: black;
+      }
+      body[data-role="admin"] main {
+        border: 2px solid var(--role-admin-bg);
+      }
+      body[data-role="admin"] #admin-panel {
+        background-color: var(--role-admin-bg);
+        border-color: var(--role-admin-bg);
+        color: black;
+        box-shadow: 0 4px 10px rgba(var(--role-admin-bg), 0.3);
+      }
+      
+      body[data-role="superadmin"] header {
+        background-color: var(--role-superadmin-bg);
+        border-color: var(--role-superadmin-bg);
+      }
+      body[data-role="superadmin"] header h1, body[data-role="superadmin"] header .header-kap {
+        color: white;
+      }
+      body[data-role="superadmin"] main {
+        border: 2px solid var(--role-superadmin-bg);
+      }
+      body[data-role="superadmin"] #admin-panel {
+        background-color: var(--role-superadmin-bg);
+        border-color: var(--role-superadmin-bg);
+        color: white;
+        box-shadow: 0 4px 10px rgba(var(--role-superadmin-bg), 0.3);
+      }
+
+      /* --- Header with Logo and Dark Mode Button --- */
       header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 20px 40px;
+        padding: 15px 30px;
         background-color: var(--card-bg);
         border-bottom: 2px solid var(--border-color);
-        position: relative; /* For refresh button */
+        position: sticky; /* Keep it visible */
+        top: 0;
+        z-index: 100;
+      }
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
       }
       header img {
-        height: 35px;
+        height: 30px;
         width: auto;
       }
       header h1 { 
-        color: var(--konecta-dark);
-        text-align: right;
-        font-size: 1.5rem;
-        font-weight: 600;
+        color: var(--text-color);
+        font-size: 1.25rem;
+        font-weight: 700;
         margin: 0;
-        /* NEW: Make space for refresh button */
         display: flex;
         align-items: center;
       }
@@ -70,38 +144,32 @@
       .header-kap {
         color: var(--konecta-blue);
         font-weight: 700;
-        font-size: 1.4rem; /* Slightly smaller */
         margin-left: 5px;
       }
       
-      /* --- NEW: Header Refresh Button --- */
-      #header-refresh-button {
-        background: none;
-        border: none;
+      /* --- Dark Mode & Refresh Buttons --- */
+      #header-refresh-button, #dark-mode-button {
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
         cursor: pointer;
-        padding: 5px;
-        opacity: 0.7;
-        transition: all 0.2s;
-        min-width: auto;
-        margin: 0 0 0 15px; /* Space from title */
+        padding: 8px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       }
-      #header-refresh-button:hover {
-        opacity: 1;
-        transform: scale(1.1);
-        background-color: #f0f0f0;
-        box-shadow: none;
+      #header-refresh-button:hover, #dark-mode-button:hover {
+        opacity: 0.9;
+        transform: scale(1.05);
+        background-color: var(--page-bg);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       }
-      /* UPDATED: Changed from 'svg' to 'img' */
-      #header-refresh-button img {
-        width: 20px;
-        height: 20px;
-        /* fill: var(--konecta-blue); <-- Removed 'fill', as it only works on SVGs */
+      #header-refresh-button img, #dark-mode-button img {
+        width: 18px;
+        height: 18px;
+        /* The filter is handled by JS on theme change */
       }
-      /* UPDATED: Changed from 'svg' to 'img' */
       #header-refresh-button.loading img {
         animation: spin 1s linear infinite;
       }
@@ -109,93 +177,103 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
-      /* --- End Refresh Button --- */
-      
+
       /* --- Centered Card Layout --- */
       main {
-        max-width: 960px;
+        max-width: 1100px;
         margin: 30px auto;
         background-color: var(--card-bg);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
-        overflow: hidden; /* Keep rounded corners */
+        overflow: hidden;
       }
       
       /* --- Tab Navigation --- */
       #tab-nav {
-        background-color: var(--card-bg);
         border-bottom: 1px solid var(--border-color);
-        text-align: center;
         padding-top: 10px;
         display: flex;
-        justify-content: center;
-        flex-wrap: wrap; /* Allow tabs to wrap on small screens */
+        justify-content: flex-start; /* Align left */
+        overflow-x: auto; /* Allow horizontal scroll on mobile */
+        padding-left: 30px;
+        background-color: var(--card-bg);
       }
       .tab-button {
         padding: 14px 20px;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 500;
         cursor: pointer;
         border: none;
         background-color: transparent;
         border-bottom: 3px solid transparent;
-        transition: border-color 0.3s, color 0.3s;
-        color: var(--konecta-gray);
+        transition: all 0.3s ease;
+        color: var(--text-color-secondary);
+        white-space: nowrap; /* Prevent wrapping */
+      }
+      .tab-button:hover {
+        background-color: var(--input-bg);
+        color: var(--konecta-blue);
       }
       .tab-button.active {
         color: var(--konecta-blue);
         border-bottom: 3px solid var(--konecta-blue);
+        background-color: var(--input-bg);
       }
       #schedule-tab-button, #leave-approval-tab-button, #admin-tools-tab-button, #history-report-tab-button, #dashboard-tab-button, #my-schedule-tab-button, #reporting-line-tab-button {
-        display: none; /* All hidden by default */
+        display: none;
       }
       
-      /* --- Container for all content --- */
+      /* --- Content Container --- */
       .content-container {
         padding: 30px;
       }
       
-      /* --- Tab Panels --- */
       .tab-panel {
-        display: none; /* All panels hidden by default */
+        display: none;
       }
       #punch-panel {
-        display: block; /* Show punch panel by default */
+        display: block;
       }
       
+      /* --- Info and Admin Panels --- */
       #agent-info { 
         margin-bottom: 20px; 
         padding: 15px;
-        background-color: #f7f9fa;
+        background-color: var(--input-bg);
         border: 1px solid var(--border-color);
-        border-radius: 8px;
+        border-radius: var(--radius);
         text-align: center;
         font-size: 1.1em;
         position: relative; 
+        transition: all 0.3s ease;
       }
       
       #admin-panel {
-        display: none; /* Hidden by default */
-        /* UPDATED: Use new yellow */
-        background-color: #f0fa0033; /* Yellow with 20% opacity */
-        border: 1px solid var(--konecta-yellow);
-        border-radius: 8px;
+        display: none;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
         padding: 15px;
         margin-bottom: 20px;
         text-align: center;
+        font-weight: 500;
+        transition: all 0.3s ease;
       }
       #admin-panel label {
         font-weight: 600;
         margin-right: 10px;
-        color: var(--konecta-dark);
+        color: var(--text-color);
       }
       #agent-select {
         font-size: 1em;
-        padding: 5px 8px;
-        border-radius: 5px;
+        padding: 8px 12px;
+        border-radius: 8px;
         border: 1px solid var(--border-color);
+        background-color: var(--card-bg);
+        color: var(--text-color);
       }
 
+      /* --- Punch Button Group --- */
       #buttons, #other-buttons {
         padding: 0;
         background-color: transparent;
@@ -203,43 +281,48 @@
         box-shadow: none;
         text-align: center;
       }
-      #buttons {
-         display: none; /* Hidden by default */
+      #buttons, #other-buttons {
+         display: none;
       }
       
       #other-buttons {
-        display: none; /* Hidden by default */
         margin-top: 20px;
       }
 
       button {
-        margin: 8px;
-        padding: 12px 20px;
+        margin: 10px;
+        padding: 14px 25px;
         font-size: 16px;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         background-color: var(--konecta-blue);
         color: white;
-        transition: background-color 0.3s, box-shadow 0.3s;
-        min-width: 150px;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 10px rgba(0, 169, 224, 0.3); /* Blue shadow */
+        transition: all 0.2s ease-out; 
+        min-width: 160px;
       }
       button:hover {
-        background-color: #008fbc; /* Darker blue */
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        background-color: #008fbc;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 169, 224, 0.4);
       }
       
       #other-buttons button {
-        background-color: var(--konecta-gray); /* Kept original gray */
+        background-color: var(--text-color-secondary);
+        box-shadow: 0 4px 10px rgba(95, 99, 104, 0.2);
       }
        #other-buttons button:hover {
         background-color: #3c4043;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(95, 99, 104, 0.3);
       }
       
       .button-group {
         margin-bottom: 15px;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid var(--border-color);
         padding-bottom: 15px;
       }
       .button-group:last-of-type {
@@ -249,49 +332,76 @@
       }
       
       /* --- Alert/Status Styles --- */
-      #status, #schedule-status, #leave-status, #approval-status, #my-history-status, #manual-punch-status, #admin-leave-status, #csv-import-status, #balance-adjust-status, #my-schedule-status, #dashboard-status, #reporting-line-status {
+      .status-message {
         margin-top: 20px;
-        padding: 12px;
+        padding: 15px;
         border-radius: 8px;
         min-height: 30px;
-        font-size: 1.1em;
+        font-size: 1em;
+        font-weight: 500;
         text-align: center;
         visibility: hidden;
         border: 1px solid transparent;
+        opacity: 0;
+        transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.3s ease;
+        transform: translateY(10px);
       }
-      #status.success, #schedule-status.success, #leave-status.success, #approval-status.success, #my-history-status.success, #manual-punch-status.success, #admin-leave-status.success, #csv-import-status.success, #balance-adjust-status.success, #my-schedule-status.success, #dashboard-status.success, #reporting-line-status.success { 
+      .status-message.visible {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+      }
+      
+      /* Base Style for all status containers */
+      #status, #schedule-status, #leave-status, #approval-status, #my-history-status, #manual-punch-status, #admin-leave-status, #csv-import-status, #balance-adjust-status, #my-schedule-status, #dashboard-status, #reporting-line-status {
+          /* Inherits status-message styles */
+      }
+
+      /* Success */
+      .status-message.success { 
         background-color: #edfbf3; 
         color: #2a6944; 
         border-color: #b8e9c9;
-        visibility: visible; 
       }
-      #status.error, #schedule-status.error, #leave-status.error, #approval-status.error, #my-history-status.error, #manual-punch-status.error, #admin-leave-status.error, #csv-import-status.error, #balance-adjust-status.error, #my-schedule-status.error, #dashboard-status.error, #reporting-line-status.error { 
+      body.dark-mode .status-message.success { 
+        background-color: #1a4f2b; 
+        color: #b8e9c9;
+        border-color: #2a6944;
+      }
+
+      /* Error */
+      .status-message.error { 
         background-color: #fdebee; 
         color: #c53030; 
         border-color: #fbb2b2;
-        visibility: visible; 
       }
-      #status.processing, #schedule-status.processing, #leave-status.processing, #approval-status.processing, #my-history-status.processing, #manual-punch-status.processing, #admin-leave-status.processing, #csv-import-status.processing, #balance-adjust-status.processing, #my-schedule-status.processing, #dashboard-status.processing, #reporting-line-status.processing { 
+      body.dark-mode .status-message.error { 
+        background-color: #7b1d1d; 
+        color: #fbb2b2;
+        border-color: #c53030;
+      }
+      
+      /* Processing/Warning */
+      .status-message.processing { 
         background-color: #feefc3; 
         color: #744210; 
         border-color: #f9da8a;
-        visibility: visible; 
+      }
+      body.dark-mode .status-message.processing { 
+        background-color: #4b2a0c; 
+        color: #f9da8a;
+        border-color: #744210;
       }
       
       /* --- Form Styles (reusable) --- */
-      .form-container {
-        background-color: transparent;
-        padding: 0;
-        border-radius: 0;
-        box-shadow: none;
-      }
       .form-group {
         margin-bottom: 20px;
       }
       .form-group label {
         display: block;
-        font-weight: 600;
+        font-weight: 500;
         margin-bottom: 8px;
+        color: var(--text-color-secondary); /* Calm font color for labels */
       }
       .form-group select, .form-group input, .form-group textarea {
         width: 100%;
@@ -299,9 +409,17 @@
         font-size: 1em;
         border-radius: 8px;
         border: 1px solid var(--border-color);
-        box-sizing: border-box; /* Important for 100% width */
-        background-color: #f8f9fa;
+        box-sizing: border-box;
+        background-color: var(--input-bg);
+        color: var(--text-color);
         font-family: 'Inter', Arial, sans-serif;
+      }
+      .form-group input[type="date"], .form-group input[type="time"] {
+        /* Fixes date/time text alignment in some browsers in dark mode */
+        color-scheme: var(--dark-mode-scheme, light); 
+      }
+      body.dark-mode {
+        --dark-mode-scheme: dark;
       }
       .form-row {
         display: flex;
@@ -311,34 +429,31 @@
         flex: 1;
       }
       
-      .form-group textarea {
-        resize: vertical;
-        min-height: 80px;
-      }
       .form-group small {
         display: block;
         margin-top: 6px;
         font-size: 0.85rem;
-        color: var(--konecta-gray);
+        color: var(--text-color-secondary);
       }
       
-      .form-container button {
-        width: 100%;
-        background-color: var(--google-green);
+      .form-container .submit-btn-green {
+        background-color: #34a853;
+        box-shadow: 0 4px 10px rgba(52, 168, 83, 0.3);
       }
-      .form-container button:hover {
+      .form-container .submit-btn-green:hover {
         background-color: #2c8c45;
+        box-shadow: 0 6px 15px rgba(52, 168, 83, 0.4);
       }
       
       /* --- Leave Balance Display --- */
       #leave-balances {
         display: flex;
-        gap: 15px;
+        gap: 20px;
         margin-bottom: 25px;
-        background-color: #f7f9fa;
+        background-color: var(--input-bg);
         border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 15px;
+        border-radius: var(--radius);
+        padding: 20px;
       }
       .balance-item {
         flex: 1;
@@ -347,84 +462,91 @@
       .balance-item p {
         margin: 0;
         font-size: 0.9rem;
-        color: var(--konecta-gray);
+        color: var(--text-color-secondary);
         font-weight: 500;
       }
       .balance-item .balance-days {
-        font-size: 1.75rem;
+        font-size: 2rem;
         font-weight: 700;
         color: var(--konecta-blue);
+        display: block;
+        margin-top: 5px;
       }
       
       /* --- Leave List Styles --- */
       .request-list {
         margin-top: 30px;
-        border-top: 1px solid var(--border-color);
         padding-top: 20px;
       }
       .request-list-item {
-        background-color: #f7f9fa;
+        background-color: var(--input-bg);
         border: 1px solid var(--border-color);
+        border-left: 5px solid var(--konecta-blue);
         border-radius: 8px;
         padding: 15px;
         margin-bottom: 15px;
         display: flex;
-        align-items: flex-start; /* Align top */
+        align-items: flex-start;
         gap: 15px;
+        transition: all 0.3s ease;
       }
-      .request-list-item .item-number {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: var(--konecta-blue);
-        min-width: 25px;
-        padding-top: 2px;
+      .request-list-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       }
+      
       .request-list-item .item-details {
         flex: 1;
       }
       .request-list-item .item-details h4 {
         margin: 0 0 10px 0;
-        color: var(--konecta-dark);
+        color: var(--text-color);
+        font-size: 1.1em;
       }
       .request-list-item .item-details p {
         margin: 4px 0;
         font-size: 0.95rem;
-      }
-      .request-list-item .item-details .supervisor-info,
-      .request-list-item .item-details .balance-info {
-        font-style: italic;
-        color: var(--konecta-gray);
-        font-size: 0.9rem;
-        margin-top: 8px;
+        color: var(--text-color-secondary);
       }
       .request-list-item .item-actions {
         min-width: 150px;
         text-align: right;
       }
+      
+      /* Status Badges */
       .status-badge {
         display: inline-block;
-        padding: 5px 12px;
-        font-size: 0.9rem;
+        padding: 6px 14px;
+        font-size: 0.85rem;
         font-weight: 600;
         border-radius: 20px;
         margin-top: 5px;
+        text-transform: uppercase;
       }
       .status-pending { background-color: #feefc3; color: #744210; }
       .status-approved { background-color: #edfbf3; color: #2a6944; }
       .status-denied { background-color: #fdebee; color: #c53030; }
+      
+      body.dark-mode .status-pending { background-color: #4b2a0c; color: #f9da8a; }
+      body.dark-mode .status-approved { background-color: #1a4f2b; color: #b8e9c9; }
+      body.dark-mode .status-denied { background-color: #7b1d1d; color: #fbb2b2; }
+
       .item-actions .approve-btn,
       .item-actions .deny-btn {
         min-width: 100px;
         padding: 8px 12px;
         font-size: 14px;
         margin: 4px;
+        font-weight: 500;
+        box-shadow: none;
+        transform: none;
       }
-      .approve-btn { background-color: var(--google-green); }
+      .approve-btn { background-color: #34a853; }
       .approve-btn:hover { background-color: #2c8c45; }
-      .deny-btn { background-color: var(--google-red); }
+      .deny-btn { background-color: #ea4335; }
       .deny-btn:hover { background-color: #b92c2c; }
       
-      /* --- Approval Filter Buttons --- */
+      /* --- Filter Buttons --- */
       #approval-filter-nav {
         display: flex;
         gap: 10px;
@@ -437,13 +559,13 @@
         font-weight: 500;
         border-radius: 8px;
         border: 1px solid var(--border-color);
-        background-color: #f8f9fa;
-        color: var(--konecta-gray);
+        background-color: var(--input-bg);
+        color: var(--text-color-secondary);
         cursor: pointer;
         transition: all 0.2s;
       }
       .filter-button:hover {
-        background-color: #f1f3f4;
+        background-color: var(--page-bg);
       }
       .filter-button.active {
         background-color: var(--konecta-blue);
@@ -451,118 +573,47 @@
         border-color: var(--konecta-blue);
       }
       
-      /* --- History Report Styles --- */
-      #history-report-form {
+      /* --- History Report & Dashboard Form Layouts --- */
+      #history-report-form, #dashboard-form {
         display: flex;
         flex-wrap: wrap; 
         gap: 15px;
         align-items: flex-end;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 20px;
       }
-      #history-report-form .form-group {
+      #history-report-form .form-group, #dashboard-form .form-group {
         flex: 1;
         min-width: 150px; 
         margin-bottom: 0;
       }
-      #history-user-select {
+      #history-user-select, #dashboard-user-select {
         height: 120px;
-        padding: 10px;
       }
       #history-report-form button {
         width: auto;
         min-width: 150px;
         margin: 0 0 0 10px;
+        box-shadow: none;
+        transform: none;
       }
       #history-report-form .view-btn {
         background-color: var(--konecta-dark);
       }
       #history-report-form .view-btn:hover {
         background-color: #1a0199;
+        transform: translateY(-1px);
       }
       #history-report-form .export-btn {
-        background-color: var(--konecta-gray);
-        display: none; 
+        background-color: var(--text-color-secondary);
+        display: none;
       }
       #history-report-form .export-btn:hover {
         background-color: #3c4043;
       }
       
-      #history-report-display {
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid var(--border-color);
-        overflow-x: auto; 
-      }
-      .report-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9rem;
-      }
-      .report-table th, .report-table td {
-        border: 1px solid var(--border-color);
-        padding: 10px;
-        text-align: left;
-      }
-      .report-table th {
-        background-color: #f7f9fa;
-        font-weight: 600;
-      }
-      .report-table .highlight-red {
-        color: var(--google-red);
-        font-weight: bold;
-      }
-      .report-table .highlight-green {
-        color: var(--google-green);
-        font-weight: bold;
-      }
-
-      /* --- Section divider --- */
-      .section-divider {
-        border: 0;
-        border-top: 1px solid var(--border-color);
-        margin: 30px 0;
-      }
-      
-      /* --- CSV Importer Styles --- */
-      #csv-import-form {
-        padding: 20px;
-        background-color: #f7f9fa;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-      }
-      #csv-import-form .form-group {
-        margin-bottom: 0;
-      }
-      #csv-import-form button {
-        width: 100%;
-        background-color: var(--konecta-dark);
-      }
-      #csv-import-form button:hover {
-        background-color: #1a0199;
-      }
-
-      /* --- Dashboard Styles (UPDATED) --- */
-      #dashboard-controls {
-        background-color: #f7f9fa;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-      }
-      /* NEW: Dashboard form layout */
-      #dashboard-form {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        align-items: flex-end;
-      }
-      #dashboard-form .form-group {
-        flex: 1;
-        min-width: 150px;
-        margin-bottom: 0;
-      }
-      #dashboard-user-select {
-        height: 150px;
-      }
       #dashboard-filters {
         display: flex;
         flex-direction: column;
@@ -573,109 +624,156 @@
         width: 100%;
         margin: 0;
       }
+      #dashboard-filters .load-btn { background-color: var(--konecta-dark); }
+      #dashboard-filters .load-btn:hover { background-color: #1a0199; }
+      #dashboard-filters .team-btn { background-color: var(--konecta-blue); }
+      #dashboard-filters .team-btn:hover { background-color: #008fbc; }
+      #dashboard-filters .save-btn { background-color: #34a853; }
+      #dashboard-filters .save-btn:hover { background-color: #2c8c45; }
       
+      /* --- Report Tables --- */
+      #history-report-display, #my-schedule-display {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+        overflow-x: auto; 
+      }
+      .report-table, .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+      }
+      .report-table th, .report-table td, .schedule-table th, .schedule-table td {
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        text-align: left;
+        color: var(--text-color);
+      }
+      .report-table th, .schedule-table th {
+        background-color: var(--input-bg);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        color: var(--text-color-secondary);
+      }
+      
+      .schedule-table .day-today {
+        font-weight: 700;
+        background-color: var(--konecta-yellow);
+        color: black;
+      }
+      body.dark-mode .schedule-table .day-today {
+        background-color: var(--role-admin-bg);
+        color: white;
+      }
+      
+      /* --- Dashboard Grid --- */
       #dashboard-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(3, 1fr);
         gap: 20px;
       }
       .dashboard-card {
-        background-color: #f7f9fa;
+        background-color: var(--input-bg);
         border: 1px solid var(--border-color);
-        border-radius: 8px;
+        border-radius: var(--radius);
         padding: 20px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
+      .dashboard-card.full-width {
+        grid-column: 1 / -1;
       }
       .dashboard-card h3 {
         margin: 0 0 15px 0;
         padding-bottom: 10px;
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--konecta-blue);
+        font-size: 1.2rem;
       }
-      .chart-container {
+      .chart-container, .table-container {
         width: 100%;
-        height: 350px;
-      }
-      /* NEW: Adherence detail table container */
-      .table-container {
-        width: 100%;
-        height: 350px;
+        min-height: 250px;
         overflow-y: auto;
       }
-      
-      @media (max-width: 768px) {
+
+      /* --- Section divider --- */
+      .section-divider {
+        border: 0;
+        border-top: 1px solid var(--border-color);
+        margin: 30px 0;
+      }
+
+      /* --- Responsive Design --- */
+      @media (max-width: 900px) {
         #dashboard-grid {
           grid-template-columns: 1fr;
         }
-        #dashboard-form {
+        .dashboard-card.full-width {
+          grid-column: auto;
+        }
+        .form-row, #history-report-form, #dashboard-form {
           flex-direction: column;
           align-items: stretch;
         }
-        #dashboard-filters {
-          flex-direction: row;
+        #history-report-form button, #dashboard-filters button {
+          margin: 10px 0 0 0;
         }
-      }
-
-      /* --- My Schedule Table Styles --- */
-      .schedule-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-      }
-      .schedule-table th, .schedule-table td {
-        border: 1px solid var(--border-color);
-        padding: 12px;
-        text-align: left;
-      }
-      .schedule-table th {
-        background-color: #f7f9fa;
-        font-weight: 600;
-      }
-      .schedule-table .day-past {
-        color: var(--konecta-gray);
-        background-color: #f1f3f4;
-      }
-      .schedule-table .day-today {
-        font-weight: 700;
-        background-color: #feefc3;
-      }
-      .schedule-table .status-leave {
-        font-weight: 600;
-        color: var(--konecta-blue);
-      }
-
-      /* --- Footer Signature --- */
-      footer {
-        text-align: center;
-        padding: 25px;
-        margin-top: 10px;
-        font-size: 0.8rem;
-        color: #aaa;
+        #history-report-form .form-group, #dashboard-form .form-group {
+          min-width: 100%;
+        }
+        main {
+          margin: 15px;
+        }
+        header {
+          padding: 15px 20px;
+        }
+        .content-container {
+          padding: 20px;
+        }
+        #tab-nav {
+          padding-left: 20px;
+        }
+        .request-list-item {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .request-list-item .item-actions {
+            text-align: left;
+            margin-top: 10px;
+        }
       }
     </style>
   </head>
   <body>
     <header>
       <img src="https://th.bing.com/th/id/OIP.gafgWpiLoUVHSxGah643xQHaCa?w=338&h=114&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3" alt="Konecta Logo">
-      <h1>
-        Konecta Adherence Portal <span class="header-kap">(KAP)</span>
-        <!-- NEW: Header Refresh Button -->
-        <button id="header-refresh-button" title="Refresh Data" onclick="refreshCurrentData()">
-          <!-- UPDATED: Replaced SVG with your IMG tag -->
-          <img src="https://icons.veryicon.com/png/o/miscellaneous/two-color-webpage-small-icon/refresh-174.png" alt="Refresh Icon">
+      <div class="header-controls">
+        <h1>
+          KAP
+        </h1>
+        <!-- Dark Mode Toggle: Uses Moon for Dark and Sun for Light -->
+        <button id="dark-mode-button" title="Toggle Dark Mode" onclick="toggleDarkMode()">
+           <!-- CHANGE 2: Kept standard sun/moon SVGs as they are clearest for dark mode toggles -->
+          <img id="dark-mode-icon" src="https://www.svgrepo.com/show/396652/sun.svg" alt="Theme Icon">
         </button>
-      </h1>
+        <!-- Header Refresh Button -->
+        <button id="header-refresh-button" title="Refresh Data" onclick="refreshCurrentData()">
+          <!-- CHANGE 3: Updated image source to the requested PNG icon -->
+          <img id="refresh-icon" src="https://icons.veryicon.com/png/o/miscellaneous/two-color-webpage-small-icon/refresh-174.png" alt="Refresh Icon">
+        </button>
+      </div>
     </header>
 
     <main>
       <div id="tab-nav">
         <button id="dashboard-tab-button" class="tab-button" onclick="showTab('dashboard')">Dashboard</button>
-        <button id="punch-tab-button" class="tab-button active" onclick="showTab('punch')">Punch</button>
+        <button id="punch-tab-button" class="tab-button active" onclick="showTab('punch')">Punch Clock</button>
         <button id="my-schedule-tab-button" class="tab-button" onclick="showTab('my-schedule')">My Schedule</button>
         <button id="leave-request-tab-button" class="tab-button" onclick="showTab('leave-request')">My Leave</button> 
+        <button id="leave-approval-tab-button" class="tab-button" onclick="showTab('leave-approval')">Approvals</button>
         <button id="history-report-tab-button" class="tab-button" onclick="showTab('history-report')">History Report</button>
         <button id="schedule-tab-button" class="tab-button" onclick="showTab('schedule')">Schedule Editor</button>
-        <button id="leave-approval-tab-button" class="tab-button" onclick="showTab('leave-approval')">Leave Approvals</button>
         <button id="admin-tools-tab-button" class="tab-button" onclick="showTab('admin-tools')">Admin Tools</button>
-        <!-- NEW: Reporting Line Tab -->
         <button id="reporting-line-tab-button" class="tab-button" onclick="showTab('reporting-line')">Reporting Line</button>
       </div>
 
@@ -685,7 +783,6 @@
         <!--      TAB 1: PUNCH PANEL            -->
         <!-- ================================== -->
         <div id="punch-panel" class="tab-panel">
-          <!-- REMOVED refresh button from here -->
           <div id="agent-info">Loading user info...</div> 
           <div id="admin-panel"><label for="agent-select">Punch For:</label><select id="agent-select"></select></div>
           <div id="buttons">
@@ -700,7 +797,7 @@
             <div class="button-group"><button onclick="punch('Meeting In')">Meeting In</button><button onclick="punch('Meeting Out')">Meeting Out</button></div>
              <div class="button-group"><button onclick="punch('Personal In')">Personal In</button><button onclick="punch('Personal Out')">Personal Out</button></div>
           </div>
-          <div id="status"></div>
+          <div id="status" class="status-message"></div>
         </div>
 
         <!-- ================================== -->
@@ -708,8 +805,8 @@
         <!-- ================================== -->
         <div id="my-schedule-panel" class="tab-panel">
           <h2>My Upcoming Schedule</h2>
-          <p>This shows your schedule for the next 7 days, including today.</p>
-          <div id="my-schedule-status"></div>
+          <p>Your schedule for the next 7 days.</p>
+          <div id="my-schedule-status" class="status-message"></div>
           <div id="my-schedule-display"></div>
         </div>
 
@@ -725,14 +822,15 @@
           </div>
           <form id="leave-form" class="form-container">
             <h2>Submit Leave Request</h2>
-            <!-- REMOVED Supervisor Dropdown -->
             <div class="form-group"><label for="leave-type">Leave Type</label><select id="leave-type"><option value="Annual">Annual</option><option value="Sick">Sick</option><option value="Casual">Casual</option></select></div>
-            <div class="form-group"><label for="leave-start-date">Start Date</label><input type="date" id="leave-start-date" required></div>
-            <div class="form-group"><label for="leave-end-date">End Date</label><input type="date" id="leave-end-date"><small>Leave blank for a single-day request.</small></div>
+            <div class="form-row">
+              <div class="form-group"><label for="leave-start-date">Start Date</label><input type="date" id="leave-start-date" required></div>
+              <div class="form-group"><label for="leave-end-date">End Date</label><input type="date" id="leave-end-date"><small>Leave blank for a single-day request.</small></div>
+            </div>
             <div class="form-group"><label for="leave-reason">Reason (Optional)</label><textarea id="leave-reason" rows="3"></textarea></div>
-            <button type="button" onclick="submitLeaveRequest()">Submit Request</button>
+            <button type="button" class="submit-btn-green" onclick="submitLeaveRequest()">Submit Request</button>
           </form>
-          <div id="leave-status"></div>
+          <div id="leave-status" class="status-message"></div>
           <div class="request-list">
             <h2>My Request History</h2>
             <div id="my-requests-list" class="request-list"></div>
@@ -761,9 +859,9 @@
             <button type="button" class="export-btn" id="export-csv-btn" onclick="exportHistoryToCSV()">Export to CSV</button>
           </form>
           
-          <div id="my-history-status"></div>
+          <div id="my-history-status" class="status-message"></div>
           <div id="history-report-display">
-             <!-- History data will be loaded here -->
+             <p class="text-color-secondary">Select users and dates, then click "View History" to generate the report.</p>
           </div>
         </div>
 
@@ -773,27 +871,32 @@
         <div id="schedule-panel" class="tab-panel">
           <form id="csv-import-form" class="form-container">
             <h2>Bulk Schedule Importer (CSV)</h2>
-            <p>Upload a CSV file with headers: `Name`, `Date` (MM/dd/yyyy), `StartTime` (HH:mm), `EndTime` (HH:mm), `LeaveType`, `Email`</p>
+            <p class="text-color-secondary">Upload a CSV file with headers: `Name`, `Date` (MM/dd/yyyy), `StartTime` (HH:mm), `EndTime` (HH:mm), `LeaveType`, `Email`</p>
             <div class="form-group">
               <label for="csv-file-input">Select CSV File</label>
               <input type="file" id="csv-file-input" accept=".csv">
             </div>
-            <button type="button" onclick="importScheduleCSV()">Import CSV</button>
+            <button type="button" style="background-color:var(--konecta-dark)" onclick="importScheduleCSV()">Import CSV</button>
           </form>
-          <div id="csv-import-status"></div>
+          <div id="csv-import-status" class="status-message"></div>
           
           <hr class="section-divider">
           
           <form id="schedule-form" class="form-container">
             <h2>Manual Schedule Editor</h2>
             <div class="form-group"><label for="schedule-agent-select">User</label><select id="schedule-agent-select"></select></div>
-            <div class="form-group"><label for="schedule-start-date">Start Date</label><input type="date" id="schedule-start-date" required></div>
-            <div class="form-group"><label for="schedule-end-date">End Date (Optional)</label><input type="date" id="schedule-end-date"><small>Leave blank to submit for a single day.</small></div>
+            <div class="form-row">
+              <div class="form-group"><label for="schedule-start-date">Start Date</label><input type="date" id="schedule-start-date" required></div>
+              <div class="form-group"><label for="schedule-end-date">End Date (Optional)</label><input type="date" id="schedule-end-date"><small>Leave blank to submit for a single day.</small></div>
+            </div>
             <div class="form-group"><label for="schedule-leave-type">Leave Type / Status</label><select id="schedule-leave-type" onchange="toggleTimeFields()"><option value="Present">Present</option><option value="Sick">Sick</option><option value="Annual">Annual</option><option value="Casual">Casual</option><option value="Absent">Absent</option></select></div>
-            <div id="time-fields"><div class="form-group"><label for="schedule-start-time">Shift Start Time</label><input type="time" id="schedule-start-time"></div><div class="form-group"><label for="schedule-end-time">Shift End Time</label><input type="time" id="schedule-end-time"></div></div>
-            <button type="button" onclick="submitSchedule()">Submit Schedule(s)</button>
+            <div id="time-fields" class="form-row">
+              <div class="form-group"><label for="schedule-start-time">Shift Start Time</label><input type="time" id="schedule-start-time"></div>
+              <div class="form-group"><label for="schedule-end-time">Shift End Time</label><input type="time" id="schedule-end-time"></div>
+            </div>
+            <button type="button" class="submit-btn-green" onclick="submitSchedule()">Submit Schedule(s)</button>
           </form>
-          <div id="schedule-status"></div>
+          <div id="schedule-status" class="status-message"></div>
         </div>
         
         <!-- ================================== -->
@@ -802,10 +905,10 @@
         <div id="leave-approval-panel" class="tab-panel">
           <h2>Pending Leave Approvals</h2>
           <div id="approval-filter-nav">
-            <button id="filter-mine" class="filter-button" onclick="loadPendingRequests('mine')">My Pending Requests</button>
+            <button id="filter-mine" class="filter-button active" onclick="loadPendingRequests('mine')">My Pending Requests</button>
             <button id="filter-all" class="filter-button" onclick="loadPendingRequests('all')">All Pending Requests</button>
           </div>
-          <div id="approval-status"></div>
+          <div id="approval-status" class="status-message"></div>
           <div id="pending-requests-list" class="request-list"></div>
         </div>
         
@@ -815,51 +918,49 @@
         <div id="admin-tools-panel" class="tab-panel">
           <form id="manual-punch-form" class="form-container">
             <h2>Manual Punch Editor</h2>
-            <p>Manually add or overwrite a punch for a user. This will bypass duplicate/sequential checks and recalculate metrics.</p>
+            <p class="text-color-secondary">Manually add or overwrite a punch for a user. This will bypass duplicate/sequential checks and recalculate metrics.</p>
             <div class="form-group"><label for="manual-punch-user">User</label><select id="manual-punch-user" required></select></div>
             <div class="form-group"><label for="manual-punch-action">Punch Action</label><select id="manual-punch-action" required><option value="">-- Select an action --</option><optgroup label="Adherence"><option value="Login">Login</option><option value="First Break In">First Break In</option><option value="First Break Out">First Break Out</option><option value="Lunch In">Lunch In</option><option value="Lunch Out">Lunch Out</option><option value="Last Break In">Last Break In</option><option value="Last Break Out">Last Break Out</option><option value="Logout">Logout</option></optgroup><optgroup label="Other Codes"><option value="Coaching In">Coaching In</option><option value="Coaching Out">Coaching Out</option><option value="Meeting In">Meeting In</option><option value="Meeting Out">Meeting Out</option><option value="Personal In">Personal In</option><option value="Personal Out">Personal Out</option></optgroup></select></div>
             <div class="form-row"><div class="form-group"><label for="manual-punch-date">Date of Punch</label><input type="date" id="manual-punch-date" required></div><div class="form-group"><label for="manual-punch-time">Time of Punch</label><input type="time" id="manual-punch-time" required></div></div>
             <button type="button" onclick="submitManualPunch()" style="background-color:var(--konecta-dark)">Submit Manual Punch</button>
           </form>
-          <div id="manual-punch-status"></div>
+          <div id="manual-punch-status" class="status-message"></div>
           
           <hr class="section-divider">
           
            <form id="balance-adjustment-form" class="form-container">
             <h2>Leave Balance Management</h2>
-            <p>Manually adjust a user's leave balance. Use a positive number (e.g., 2) to add days, and a negative number (e.g., -1) to remove days.</p>
+            <p class="text-color-secondary">Manually adjust a user's leave balance. Use a positive number (e.g., 2) to add days, and a negative number (e.g., -1) to remove days.</p>
             <div class="form-group"><label for="balance-user-select">Select User</label><select id="balance-user-select" required></select></div>
             <div class="form-row">
               <div class="form-group"><label for="balance-leave-type">Leave Type</label><select id="balance-leave-type"><option value="Annual">Annual</option><option value="Sick">Sick</option><option value="Casual">Casual</option></select></div>
               <div class="form-group"><label for="balance-amount">Amount to Adjust</label><input type="number" id="balance-amount" step="0.5" placeholder="e.g., -1 or 1.5" required></div>
             </div>
             <div class="form-group"><label for="balance-reason">Reason for Adjustment</label><textarea id="balance-reason" rows="2" required></textarea></div>
-            <button type="button" onclick="submitBalanceAdjustment()" style="background-color:var(--google-yellow); color:black;">Submit Balance Adjustment</button>
+            <button type="button" style="background-color:var(--konecta-yellow); color:black;" onclick="submitBalanceAdjustment()">Submit Balance Adjustment</button>
           </form>
-          <div id="balance-adjust-status"></div>
+          <div id="balance-adjust-status" class="status-message"></div>
 
           <hr class="section-divider">
           
           <form id="admin-leave-form" class="form-container">
             <h2>Submit Leave on Behalf of User</h2>
-            <p>Submit a leave request for a user. This will check their balance and send it to their assigned supervisor for approval.</p>
+            <p class="text-color-secondary">Submit a leave request for a user. This will check their balance and send it to their assigned supervisor for approval.</p>
             <div class="form-group"><label for="admin-leave-user">Select User</LabeL><select id="admin-leave-user" required></select></div>
-            <!-- REMOVED Supervisor Dropdown -->
             <div class="form-group"><label for="admin-leave-type">Leave Type</label><select id="admin-leave-type"><option value="Annual">Annual</option><option value="Sick">Sick</option><option value="Casual">Casual</option></select></div>
             <div class="form-row"><div class="form-group"><label for="admin-leave-start-date">Start Date</label><input type="date" id="admin-leave-start-date" required></div><div class="form-group"><label for="admin-leave-end-date">End Date</label><input type="date" id="admin-leave-end-date"><small>Leave blank for a single-day request.</small></div></div>
             <div class="form-group"><label for="admin-leave-reason">Reason (Optional)</label><textarea id="admin-leave-reason" rows="3"></textarea></div>
-            <button type="button" onclick="submitAdminLeaveRequest()">Submit Request for User</button>
+            <button type="button" class="submit-btn-green" onclick="submitAdminLeaveRequest()">Submit Request for User</button>
           </form>
           
-          <div id="admin-leave-status"></div>
+          <div id="admin-leave-status" class="status-message"></div>
         </div>
 
         <!-- ================================== -->
         <!--     TAB 8: DASHBOARD PANEL         -->
         <!-- ================================== -->
         <div id="dashboard-panel" class="tab-panel">
-          
-          <!-- UPDATED: Dashboard Controls -->
+          <h2 id="dashboard-title">Team Dashboard</h2>
           <div id="dashboard-controls" class="form-container">
             <form id="dashboard-form">
               <div class="form-group">
@@ -871,17 +972,16 @@
                 <input type="date" id="dashboard-date" required>
               </div>
               <div id="dashboard-filters">
-                <button type="button" style="background-color:var(--konecta-dark);" onclick="loadDashboard()">Load Dashboard</button>
-                <button type="button" style="background-color:var(--konecta-blue);" onclick="loadMyTeam()">Load My Team</button>
-                <button type="button" style="background-color:var(--google-green);" onclick="saveMyTeam()">Save as My Team</button>
+                <button type="button" class="load-btn" onclick="loadDashboard()">Load Dashboard</button>
+                <button type="button" class="team-btn" onclick="loadMyTeam(false)">Load My Team</button>
+                <button type="button" class="save-btn" onclick="saveMyTeam()">Save as My Team</button>
               </div>
             </form>
           </div>
-          <div id="dashboard-status"></div>
+          <div id="dashboard-status" class="status-message"></div>
           
           <hr class="section-divider">
           
-          <h2 id="dashboard-title">Team Dashboard</h2>
           <div id="dashboard-grid">
             <div class="dashboard-card">
               <h3>Current User Status</h3>
@@ -891,11 +991,11 @@
               <h3>Total Adherence Metrics</h3>
               <div id="adherence-bar-chart" class="chart-container"></div>
             </div>
-            <div class="dashboard-card" style="grid-column: 1 / -1;">
+            <div class="dashboard-card full-width">
               <h3>Adherence Details</h3>
               <div id="adherence-detail-table" class="table-container"></div>
             </div>
-            <div class="dashboard-card" style="grid-column: 1 / -1;">
+            <div class="dashboard-card full-width">
               <h3>Pending Leave Requests (for selected users)</h3>
               <div id="pending-leave-table" class="chart-container"></div>
             </div>
@@ -908,32 +1008,28 @@
         <div id="reporting-line-panel" class="tab-panel">
           <form id="reporting-line-form" class="form-container">
             <h2>Update User Reporting Line</h2>
-            <p>Select a user and assign them to a new supervisor. The change will be logged. If you are a manager, you can only move users between supervisors who report to you. Superadmins can move any user.</p>
+            <p class="text-color-secondary">Select a user and assign them to a new supervisor. This action is typically only possible if you are a Superadmin, or if the user and new supervisor are both under your management.</p>
             
             <div class="form-group">
               <label for="reporting-line-user">Select User to Move</label>
-              <select id="reporting-line-user" required>
-                <!-- Admin-only list of users -->
-              </select>
+              <select id="reporting-line-user" required></select>
             </div>
             
             <div class="form-group">
               <label for="reporting-line-supervisor">Assign to New Supervisor</label>
-              <select id="reporting-line-supervisor" required>
-                <!-- Admin-only list of supervisors -->
-              </select>
+              <select id="reporting-line-supervisor" required></select>
             </div>
             
             <button type="button" onclick="submitReportingLineChange()" style="background-color:var(--konecta-dark)">Update Reporting Line</button>
           </form>
-          <div id="reporting-line-status"></div>
+          <div id="reporting-line-status" class="status-message"></div>
         </div>
 
       </div> <!-- End .content-container -->
     </main> <!-- End .card -->
 
     <footer>
-      <p>Created by Fady Bekhet</p>
+      <p style="color:var(--text-color-secondary)">Konecta Adherence Portal - Created by Fady Bekhet</p>
     </footer>
 
 
@@ -944,93 +1040,143 @@
       let allAdminsList = []; 
       let lastHistoryData = null;
       let chartsLoaded = false; 
-      // const timeZone = "<?= Session.getScriptTimeZone() ?>"; 
+      
+      // --- NEW: Dark Mode Functions ---
+      const DARK_MODE_KEY = 'kap_dark_mode';
 
-      // === UPDATED: TAB SWITCHING FUNCTION (Bug Fix) ===
+      function applyTheme(isDark) {
+        const body = document.body;
+        const icon = document.getElementById('dark-mode-icon');
+        
+        if (isDark) {
+          body.classList.add('dark-mode');
+          body.setAttribute('data-theme', 'dark');
+          if (icon) icon.src = "https://www.svgrepo.com/show/532395/moon.svg"; // CHANGE 2: Moon icon
+          // Invert all icons in dark mode
+          document.querySelectorAll('#header-refresh-button img, #dark-mode-button img').forEach(img => {
+            if (img.id !== 'dark-mode-icon') {
+              img.style.filter = 'invert(100%)';
+            }
+          });
+        } else {
+          body.classList.remove('dark-mode');
+          body.setAttribute('data-theme', 'light');
+          if (icon) icon.src = "https://www.svgrepo.com/show/396652/sun.svg"; // CHANGE 2: Sun icon
+          document.querySelectorAll('#header-refresh-button img, #dark-mode-button img').forEach(img => {
+             img.style.filter = 'none';
+          });
+        }
+      }
+
+      function toggleDarkMode() {
+        const isDark = document.body.classList.contains('dark-mode');
+        const newTheme = !isDark;
+        applyTheme(newTheme);
+        localStorage.setItem(DARK_MODE_KEY, newTheme ? 'enabled' : 'disabled');
+      }
+
+      function initializeTheme() {
+        const savedTheme = localStorage.getItem(DARK_MODE_KEY);
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        let initialTheme = prefersDark;
+
+        if (savedTheme === 'enabled') {
+            initialTheme = true;
+        } else if (savedTheme === 'disabled') {
+            initialTheme = false;
+        }
+        
+        applyTheme(initialTheme);
+      }
+      
+      // --- Status Message Utility ---
+      function setStatus(id, type, message) {
+        const statusDiv = document.getElementById(id);
+        
+        // Hide all statuses first (removes visible class)
+        document.querySelectorAll('.status-message').forEach(div => {
+            div.classList.remove('visible', 'success', 'error', 'processing');
+        });
+        
+        if (message) {
+            statusDiv.classList.add('visible', type);
+            statusDiv.innerText = message;
+        } else {
+            statusDiv.classList.remove('visible', 'success', 'error', 'processing');
+        }
+      }
+      
+      // === TAB SWITCHING FUNCTION ===
       function showTab(tabName) {
         // Hide all panels
-        document.getElementById('punch-panel').style.display = 'none';
-        document.getElementById('schedule-panel').style.display = 'none';
-        document.getElementById('leave-request-panel').style.display = 'none';
-        document.getElementById('leave-approval-panel').style.display = 'none';
-        document.getElementById('history-report-panel').style.display = 'none'; 
-        document.getElementById('admin-tools-panel').style.display = 'none'; 
-        document.getElementById('my-schedule-panel').style.display = 'none';
-        document.getElementById('dashboard-panel').style.display = 'none';
-        document.getElementById('reporting-line-panel').style.display = 'none'; // NEW
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+          panel.style.display = 'none';
+        });
 
         // Deactivate all tab buttons
-        document.getElementById('punch-tab-button').classList.remove('active');
-        document.getElementById('schedule-tab-button').classList.remove('active');
-        document.getElementById('leave-request-tab-button').classList.remove('active');
-        document.getElementById('leave-approval-tab-button').classList.remove('active');
-        document.getElementById('history-report-tab-button').classList.remove('active'); 
-        document.getElementById('admin-tools-tab-button').classList.remove('active'); 
-        document.getElementById('my-schedule-tab-button').classList.remove('active');
-        document.getElementById('dashboard-tab-button').classList.remove('active');
-        document.getElementById('reporting-line-tab-button').classList.remove('active'); // NEW
+        document.querySelectorAll('.tab-button').forEach(button => {
+          button.classList.remove('active');
+        });
         
+        // Clear all status messages
+        document.querySelectorAll('.status-message').forEach(div => {
+            div.classList.remove('visible', 'success', 'error', 'processing');
+        });
+
         // Show the correct panel and activate the correct button
         document.getElementById(tabName + '-panel').style.display = 'block';
         document.getElementById(tabName + '-tab-button').classList.add('active');
         
-        // --- THIS IS THE FIX: Refresh data when tabs are clicked ---
+        // Refresh data when certain tabs are clicked
         if (tabName === 'leave-approval') {
           const currentFilter = document.getElementById('filter-mine').classList.contains('active') ? 'mine' : 'all';
           loadPendingRequests(currentFilter);
         } else if (tabName === 'leave-request') {
           loadMyRequests();
-          // Also refresh balances
           google.script.run.withSuccessHandler(user => {
             if(user && user.myBalances) populateMyBalances(user.myBalances);
           }).getUserInfo();
         } else if (tabName === 'my-schedule') {
           loadMySchedule();
         } 
-        // --- END FIX ---
       }
       
-      // --- NEW: Refresh User Info ---
+      // --- Refresh User Info ---
       function refreshCurrentData() {
         const btn = document.getElementById('header-refresh-button');
         btn.classList.add('loading');
         
-        // Find active tab
         const activeTab = document.querySelector('.tab-button.active');
-        const activeTabId = activeTab ? activeTab.id : 'punch-tab-button';
+        const activeTabName = activeTab ? activeTab.id.replace('-tab-button', '') : 'punch';
         
-        // Re-load user info (which populates dropdowns and balances)
         google.script.run
           .withSuccessHandler(user => {
-            // Repopulate user info first
             populateUserInfo(user); 
             
             // Now, reload the data for the specific tab
-            if (activeTabId === 'leave-approval-tab-button') {
+            if (activeTabName === 'leave-approval') {
               const currentFilter = document.getElementById('filter-mine').classList.contains('active') ? 'mine' : 'all';
               loadPendingRequests(currentFilter);
-            } else if (activeTabId === 'leave-request-tab-button') {
+            } else if (activeTabName === 'leave-request') {
               loadMyRequests();
-            } else if (activeTabId === 'my-schedule-tab-button') {
+            } else if (activeTabName === 'my-schedule') {
               loadMySchedule();
-            } else if (activeTabId === 'dashboard-tab-button') {
+            } else if (activeTabName === 'dashboard') {
               loadDashboard();
-            } else if (activeTabId === 'history-report-tab-button' && lastHistoryData) {
-              loadHistoryReport(); // Re-run the last report
+            } else if (activeTabName === 'history-report' && lastHistoryData) {
+              loadHistoryReport(); 
             }
             
-            // Remove loading spinner
             setTimeout(() => {
               btn.classList.remove('loading');
-            }, 500); // Short delay
+            }, 500); 
           })
           .withFailureHandler(err => {
             btn.classList.remove('loading');
-            // Show error in the main info box
             const infoDiv = document.getElementById('agent-info');
             infoDiv.innerHTML = "Error refreshing data. Please try again.";
-            infoDiv.style.color = "#c53030";
-            infoDiv.style.backgroundColor = "#fdebee";
+            infoDiv.classList.add('error');
           })
           .getUserInfo();
       }
@@ -1038,10 +1184,10 @@
       // NEW: Extracted user info population into its own function
       function populateUserInfo(user) {
         const infoDiv = document.getElementById('agent-info');
+        
         if (!user || !user.name && (user.role === 'agent' || !user.email.includes("konecta.com"))) {
           infoDiv.innerHTML = "Your email is not registered. Contact your supervisor.";
-          infoDiv.style.color = "#c53030";
-          infoDiv.style.backgroundColor = "#fdebee";
+          infoDiv.className = 'error'; 
           return;
         }
 
@@ -1050,23 +1196,18 @@
         allUsersList = user.allUsers; 
         allAdminsList = user.allAdmins; 
         
-        let displayRole = user.role;
-        if (displayRole === 'superadmin') {
-          displayRole = 'Superadmin';
-        } else if (displayRole === 'admin') {
-          displayRole = 'Admin';
-        } else if (displayRole === 'agent') {
-          displayRole = 'User';
-        }
+        // --- Apply Role-Based Body Class ---
+        document.body.setAttribute('data-role', user.role);
+
+        let displayRole = user.role.charAt(0).toUpperCase() + user.role.slice(1);
         
-        // REMOVED refresh button from inner HTML
-        infoDiv.innerHTML = `<strong>User:</strong> ${user.name || 'ADMIN'} <br><strong>Email:</strong> ${user.email} <br><strong>Role:</strong> ${displayRole}`; 
+        infoDiv.innerHTML = `<strong>User:</strong> ${user.name || 'ADMIN'} &nbsp;|&nbsp; <strong>Email:</strong> ${user.email} &nbsp;|&nbsp; <strong>Role:</strong> ${displayRole}`; 
+        infoDiv.className = '';
         
         document.getElementById('buttons').style.display = 'block';
         document.getElementById('other-buttons').style.display = 'block';
         document.getElementById('my-schedule-tab-button').style.display = 'inline-block';
         
-        // populateSupervisorDropdown(allAdminsList); // This is now removed
         if (user.myBalances) populateMyBalances(user.myBalances);
 
         // --- Show/Hide Tabs Based on Role ---
@@ -1077,19 +1218,18 @@
           document.getElementById('admin-tools-tab-button').style.display = 'inline-block'; 
           document.getElementById('history-report-tab-button').style.display = 'inline-block'; 
           document.getElementById('history-user-select-group').style.display = 'block'; 
-          document.getElementById('reporting-line-tab-button').style.display = 'inline-block'; // NEW
+          document.getElementById('reporting-line-tab-button').style.display = 'inline-block';
           
           populateAdminDropdown(allUsersList, selfUserName, 'agent-select', 'Punch for: Myself');
           document.getElementById('admin-panel').style.display = 'block';
           populateAdminDropdown(allUsersList, selfUserName, 'schedule-agent-select', 'Select a user');
           populateAdminDropdown(allUsersList, selfUserName, 'manual-punch-user', 'Select a user'); 
           populateAdminDropdown(allUsersList, selfUserName, 'admin-leave-user', 'Select user to submit for'); 
-          // populateSupervisorDropdown(allAdminsList, 'admin-leave-supervisor'); // This is now removed
           populateAdminDropdown(allUsersList, selfUserName, 'history-user-select', 'Select a user'); 
           populateAdminDropdown(allUsersList, selfUserName, 'balance-user-select', 'Select a user');
           populateAdminDropdown(allUsersList, selfUserName, 'dashboard-user-select', 'Select users'); 
-          populateAdminDropdown(allUsersList, selfUserName, 'reporting-line-user', 'Select a user'); // NEW
-          populateSupervisorDropdown(allAdminsList, 'reporting-line-supervisor'); // NEW
+          populateAdminDropdown(allUsersList, selfUserName, 'reporting-line-user', 'Select a user');
+          populateSupervisorDropdown(allAdminsList, 'reporting-line-supervisor');
           
           
           if (user.role === 'superadmin') {
@@ -1108,28 +1248,34 @@
       }
 
       function loadUserInfo() { 
+        // 1. Check saved theme
+        initializeTheme();
+        
+        // 2. Set timeout for failure
         const loadTimeout = setTimeout(() => {
           const infoDiv = document.getElementById('agent-info');
-          infoDiv.innerHTML = "The request timed out. Please refresh and re-authorize the script if asked. If this persists, contact admin.";
-          infoDiv.className = 'error'; 
-          infoDiv.style.visibility = 'visible';
+          infoDiv.innerHTML = "The request timed out. Please refresh and re-authorize the script if asked.";
+          infoDiv.classList.add('error', 'visible');
           infoDiv.style.textAlign = 'center';
         }, 15000);
 
+        // 3. Run script
         google.script.run
           .withSuccessHandler(user => { 
             clearTimeout(loadTimeout); 
-            populateUserInfo(user); // NEW: Call centralized function
+            populateUserInfo(user);
 
-            // NEW: Load team, but DON'T auto-load dashboard
             if (user.role === 'admin' || user.role === 'superadmin') {
-              // This just selects the team in the dropdown, it doesn't load the chart
+              // Load saved team to pre-select dropdown (but don't load the chart yet)
               google.script.run.withSuccessHandler(teamEmails => {
                 if (teamEmails && teamEmails.length > 0) {
                   const select = document.getElementById('dashboard-user-select');
                   Array.from(select.options).forEach(option => {
                     option.selected = teamEmails.includes(option.value);
                   });
+                  // Auto load dashboard only if it's the first admin/superadmin view
+                  // This relies on the default tab being 'punch', which it is.
+                  // We can't tell if the user has navigated back, so we'll skip auto-loading for simplicity after a DOMContentLoaded event.
                 }
               }).webGetMyTeam(); 
             }
@@ -1139,8 +1285,7 @@
             const infoDiv = document.getElementById('agent-info');
             let errorMsg = err.message || JSON.stringify(err);
             infoDiv.innerHTML = "Could not load user info. Error: " + errorMsg; 
-            infoDiv.style.color = "#c53030";
-            infoDiv.style.backgroundColor = "#fdebee";
+            infoDiv.classList.add('error', 'visible');
         }).getUserInfo(); 
       }
 
@@ -1148,27 +1293,30 @@
         const select = document.getElementById(dropdownId);
         select.innerHTML = ''; 
         
-        let firstOptionText = selfText;
-        let firstOptionValue = "";
-        
+        // Create the 'Me' or 'Select a user' option
+        const firstOption = document.createElement('option');
         if (dropdownId === 'agent-select') {
-          firstOptionText = `${selfText} (${selfName})`;
-          // Find self email from allUsersList
           const selfUser = users.find(u => u.name === selfName);
-          firstOptionValue = selfUser ? selfUser.email : '';
-        } else if (dropdownId !== 'dashboard-user-select' && dropdownId !== 'history-user-select') {
-           const selfOption = document.createElement('option');
-           selfOption.value = firstOptionValue; 
-           selfOption.textContent = firstOptionText;
-           select.appendChild(selfOption);
+          firstOption.value = selfUser ? selfUser.email : '';
+          firstOption.textContent = `${selfText} (${selfName})`;
+        } else {
+          firstOption.value = ""; 
+          firstOption.textContent = selfText;
         }
+        select.appendChild(firstOption);
 
+        // Add all other users
         users.forEach(user => { 
           const option = document.createElement('option');
           option.value = user.email; // Use EMAIL as value
           option.textContent = `${user.name} (${user.email})`;
           select.appendChild(option);
         });
+        
+        // Select the 'Me' option for the punch clock default
+        if (dropdownId === 'agent-select') {
+          select.selectedIndex = 0;
+        }
       }
       
       function populateSupervisorDropdown(admins, dropdownId = 'leave-supervisor') {
@@ -1191,12 +1339,11 @@
       }
 
       function punch(action) {
-        const statusDiv = document.getElementById('status');
         const adminSelect = document.getElementById('agent-select');
         let targetUserName = '';
         
         if (selfRole === 'admin' || selfRole === 'superadmin') {
-          const selectedEmail = adminSelect.value; // This is now an email
+          const selectedEmail = adminSelect.value;
           const user = allUsersList.find(u => u.email === selectedEmail);
           targetUserName = user ? user.name : '';
         } else {
@@ -1204,44 +1351,37 @@
         }
         
         if (!targetUserName) { 
-           statusDiv.className = 'error';
-           statusDiv.innerText = 'Please select a user to punch for.'; 
+           setStatus('status', 'error', 'Please select a user to punch for.');
            return;
         }
 
-        statusDiv.className = 'processing';
-        statusDiv.innerText = `Processing "${action}" for ${targetUserName}...`; 
+        setStatus('status', 'processing', `Processing "${action}" for ${targetUserName}...`);
 
         google.script.run
           .withSuccessHandler(msg => {
             if (msg.startsWith('Error:')) {
-              statusDiv.className = 'error';
-              statusDiv.innerText = msg.replace('Error: ', '');
+              setStatus('status', 'error', msg.replace('Error: ', ''));
             } else {
-              statusDiv.className = 'success';
-              statusDiv.innerText = msg;
+              setStatus('status', 'success', msg);
             }
           })
           .withFailureHandler(err => {
-            statusDiv.className = 'error';
-            let errorMsg = err.message || JSON.stringify(err);
-            statusDiv.innerText = 'Unexpected error: ' + errorMsg;
+            setStatus('status', 'error', 'Unexpected error: ' + (err.message || JSON.stringify(err)));
           })
-          .webPunch(action, targetUserName, null); // Pass null for timestamp
+          .webPunch(action, targetUserName, null);
       }
       
       function toggleTimeFields() {
         const leaveType = document.getElementById('schedule-leave-type').value;
         const timeFields = document.getElementById('time-fields');
         if (leaveType === 'Present') {
-          timeFields.style.display = 'block';
+          timeFields.style.display = 'flex';
         } else {
           timeFields.style.display = 'none';
         }
       }
       
       function submitSchedule() {
-        const statusDiv = document.getElementById('schedule-status');
         try {
           const userEmail = document.getElementById('schedule-agent-select').value;
           const user = allUsersList.find(u => u.email === userEmail);
@@ -1264,36 +1404,26 @@
             endTime = "";
           }
           
-          statusDiv.className = 'processing';
-          statusDiv.innerText = `Submitting schedule for ${user.name}...`;
+          setStatus('schedule-status', 'processing', `Submitting schedule for ${user.name}...`);
 
           google.script.run
             .withSuccessHandler(msg => {
               if (msg.startsWith('Error:')) {
-                statusDiv.className = 'error';
-                statusDiv.innerText = msg.replace('Error: ', '');
+                setStatus('schedule-status', 'error', msg.replace('Error: ', ''));
               } else {
-                statusDiv.className = 'success';
-                statusDiv.innerText = msg;
-                document.getElementById('schedule-agent-select').selectedIndex = 0;
+                setStatus('schedule-status', 'success', msg);
+                document.getElementById('schedule-form').reset();
                 document.getElementById('schedule-start-date').valueAsDate = new Date();
-                document.getElementById('schedule-end-date').value = ''; 
-                document.getElementById('schedule-leave-type').selectedIndex = 0;
-                document.getElementById('schedule-start-time').value = '';
-                document.getElementById('schedule-end-time').value = '';
                 toggleTimeFields();
               }
             })
             .withFailureHandler(err => {
-              statusDiv.className = 'error';
-              let errorMsg = err.message || JSON.stringify(err);
-              statusDiv.innerText = 'Unexpected error: ' + errorMsg;
+              setStatus('schedule-status', 'error', 'Unexpected error: ' + (err.message || JSON.stringify(err)));
             })
             .webSubmitScheduleRange(user.email, user.name, startDate, endDate, startTime, endTime, leaveType); 
 
         } catch (err) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = err.message;
+          setStatus('schedule-status', 'error', err.message);
         }
       }
       
@@ -1308,17 +1438,22 @@
       // --- Helper to format time strings ---
       function formatTime(dateStr) {
         if (!dateStr) return '--:--';
-        return new Date(dateStr).toLocaleTimeString("en-US", { 
-          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
-        });
+        // Check if dateStr is a full date string or just a time part
+        if (dateStr.includes('T') || dateStr.includes('-')) {
+             return new Date(dateStr).toLocaleTimeString("en-US", { 
+              hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
+            });
+        }
+        // If it's just a time string like "09:00:00", we can't reliably format it without assuming a date.
+        return dateStr;
       }
       
       // --- Helper to format seconds ---
       function formatSeconds(seconds) {
-        if (typeof seconds !== 'number' || isNaN(seconds)) return 'N/A';
+        if (typeof seconds !== 'number' || isNaN(seconds)) return '0 sec';
         if (seconds === 0) return '0 sec';
         const isNegative = seconds < 0;
-        if (isNegative) seconds = Math.abs(seconds);
+        seconds = Math.abs(seconds);
         
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
@@ -1332,35 +1467,17 @@
         return str.trim();
       }
 
-      // --- === SAFER ERROR HANDLERS === ---
       function onMyRequestsFailure(error) {
         const listDiv = document.getElementById('my-requests-list');
-        let errorMsg = "An unknown error occurred."; // Default
-        if (typeof error === 'object' && error !== null && error.message) {
-          errorMsg = error.message; // Standard error object
-        } else if (typeof error === 'string') {
-          errorMsg = error; // Just a string
-        } else if (error) {
-          errorMsg = JSON.stringify(error); // Some other object
-        }
-        listDiv.innerHTML = `<p style="color: red; font-weight: bold;">Error loading requests: ${errorMsg}</p>`;
+        listDiv.innerHTML = `<p class="status-message error visible">Error loading requests: ${error.message || JSON.stringify(error)}</p>`;
       }
 
       function onPendingRequestsFailure(error) {
         const listDiv = document.getElementById('pending-requests-list');
-        let errorMsg = "An unknown error occurred."; // Default
-        if (typeof error === 'object' && error !== null && error.message) {
-          errorMsg = error.message; // Standard error object
-        } else if (typeof error === 'string') {
-          errorMsg = error; // Just a string
-        } else if (error) {
-          errorMsg = JSON.stringify(error); // Some other object
-        }
-        listDiv.innerHTML = `<p style="color: red; font-weight: bold;">Error loading requests: ${errorMsg}</p>`;
+        listDiv.innerHTML = `<p class="status-message error visible">Error loading requests: ${error.message || JSON.stringify(error)}</p>`;
       }
-      // --- === END SAFER ERROR HANDLERS === ---
 
-      // --- === `loadMyRequests` (Calls V2) === ---
+      // --- === `loadMyRequests` ---
       function loadMyRequests() {
         google.script.run
           .withSuccessHandler(populateMyRequests)
@@ -1368,65 +1485,56 @@
           .webGetMyRequests_V2();
       }
       
-      // --- === `populateMyRequests` (With try/catch) === ---
+      // --- === `populateMyRequests` ---
       function populateMyRequests(requests) {
         const listDiv = document.getElementById('my-requests-list');
         
-        if (typeof requests === 'string' || !Array.isArray(requests)) {
-          listDiv.innerHTML = `<p style="color: red; font-weight: bold;">Received an invalid response from server: ${requests}</p>`;
+        if (!Array.isArray(requests)) {
+          listDiv.innerHTML = `<p class="status-message error visible">Received an invalid response from server.</p>`;
           return;
         }
         
         if (requests.length === 0) {
-          listDiv.innerHTML = '<p>You have no leave requests on file.</p>';
+          listDiv.innerHTML = '<p class="text-color-secondary">You have no leave requests on file.</p>';
           return;
         }
         
         let html = '';
-        try { 
-          requests.reverse().forEach((req, index) => {
-            let statusClass = '';
-            if (req.status === 'Pending') statusClass = 'status-pending';
-            if (req.status === 'Approved') statusClass = 'status-approved';
-            if (req.status === 'Denied') statusClass = 'status-denied';
-            
-            html += `
-              <div class="request-list-item">
-                <div class="item-number">${index + 1}.</div>
-                <div class="item-details">
-                  <h4>${req.leaveType}</h4>
-                  <p>
-                    <strong>Dates:</strong> ${formatDate(req.startDate)} to ${formatDate(req.endDate)}
-                    (${req.totalDays} ${req.totalDays > 1 ? 'days' : 'day'})
-                  </p>
-                  <p><strong>Submitted:</strong> ${formatDate(req.requestedDate)}</p>
-                  ${req.reason ? `<p><strong>Reason:</strong> ${req.reason}</p>` : ''}
-                  ${req.supervisorName ? `<p class="supervisor-info"><strong>Supervisor:</strong> ${req.supervisorName}</p>` : ''}
-                </div>
-                <div class="item-actions">
-                  <span class="status-badge ${statusClass}">${req.status}</span>
-                </div>
+        requests.reverse().forEach((req, index) => {
+          let statusClass = '';
+          if (req.status === 'Pending') statusClass = 'status-pending';
+          if (req.status === 'Approved') statusClass = 'status-approved';
+          if (req.status === 'Denied') statusClass = 'status-denied';
+          
+          html += `
+            <div class="request-list-item">
+              <div class="item-details">
+                <h4>${req.leaveType} Request (ID: ${req.requestID.slice(-5)})</h4>
+                <p>
+                  <strong>Dates:</strong> ${formatDate(req.startDate)} to ${formatDate(req.endDate)}
+                  (${req.totalDays} ${req.totalDays > 1 ? 'days' : 'day'})
+                </p>
+                <p><strong>Submitted:</strong> ${formatDate(req.requestedDate)}</p>
+                ${req.reason ? `<p><strong>Reason:</strong> ${req.reason}</p>` : ''}
+                <p class="supervisor-info text-color-secondary"><strong>Supervisor:</strong> ${req.supervisorName || 'N/A'}</p>
               </div>
-            `;
-          });
-        } catch (e) {
-          listDiv.innerHTML = `<p style="color: red; font-weight: bold;">Error rendering list: ${e.message}</p>`;
-          return; // Stop execution
-        }
+              <div class="item-actions">
+                <span class="status-badge ${statusClass}">${req.status}</span>
+              </div>
+            </div>
+          `;
+        });
         listDiv.innerHTML = html;
       }
       
       // --- Submit New Leave Request ---
       function submitLeaveRequest() {
-        const statusDiv = document.getElementById('leave-status');
         try {
-          // const supervisorEmail = document.getElementById('leave-supervisor').value; // REMOVED
           const leaveType = document.getElementById('leave-type').value;
           const startDate = document.getElementById('leave-start-date').value;
           let endDate = document.getElementById('leave-end-date').value;
           const reason = document.getElementById('leave-reason').value;
           
-          // if (!supervisorEmail) throw new Error("Please select your supervisor."); // REMOVED
           if (!startDate) throw new Error("Please select a Start Date.");
           if (!endDate) endDate = startDate; 
           
@@ -1435,28 +1543,23 @@
           }
           
           const requestObject = {
-            // supervisorEmail: supervisorEmail, // REMOVED
             leaveType: leaveType,
             startDate: startDate,
             endDate: endDate,
             reason: reason
           };
           
-          statusDiv.className = 'processing';
-          statusDiv.innerText = 'Submitting request...';
+          setStatus('leave-status', 'processing', 'Submitting request...');
           
           google.script.run
             .withSuccessHandler(msg => {
               if (msg.startsWith('Error:')) { 
-                statusDiv.className = 'error';
-                statusDiv.innerText = msg.replace('Error: ', '');
+                setStatus('leave-status', 'error', msg.replace('Error: ', ''));
               } else {
-                statusDiv.className = 'success';
-                statusDiv.innerText = msg;
+                setStatus('leave-status', 'success', msg);
                 document.getElementById('leave-form').reset();
                 document.getElementById('leave-start-date').valueAsDate = new Date();
                 
-                // --- THIS IS THE FIX ---
                 loadMyRequests();
                 google.script.run.withSuccessHandler(user => {
                   populateMyBalances(user.myBalances);
@@ -1465,24 +1568,21 @@
                   const currentFilter = document.getElementById('filter-mine').classList.contains('active') ? 'mine' : 'all';
                   loadPendingRequests(currentFilter);
                 }
-                // --- END FIX ---
               }
             })
             .withFailureHandler(err => {
-              statusDiv.className = 'error';
-              statusDiv.innerText = err.message;
+              setStatus('leave-status', 'error', err.message);
             })
-            .webSubmitLeaveRequest(requestObject, null); // Pass null for target user
+            .webSubmitLeaveRequest(requestObject, null);
           
         } catch (err) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = err.message;
+          setStatus('leave-status', 'error', err.message);
         }
       }
       
-      // --- === `loadPendingRequests` (Calls V2) === ---
+      // --- === `loadPendingRequests` ---
       function loadPendingRequests(filter) {
-        if (!filter) { // Default filter
+        if (!filter) {
           filter = (selfRole === 'superadmin') ? 'all' : 'mine';
         }
       
@@ -1506,124 +1606,104 @@
           .webGetPendingRequests_V2(filter);
       }
       
-      // --- === `populatePendingRequests` (With try/catch) === ---
+      // --- === `populatePendingRequests` ---
       function populatePendingRequests(requests) {
         const listDiv = document.getElementById('pending-requests-list');
         
-        if (typeof requests === 'string' || !Array.isArray(requests)) {
-          listDiv.innerHTML = `<p style="color: red; font-weight: bold;">Received an invalid response from server: ${requests}</p>`;
+        if (!Array.isArray(requests)) {
+          listDiv.innerHTML = `<p class="status-message error visible">Received an invalid response from server.</p>`;
           return;
         }
 
         if (!requests || requests.length === 0) {
-          listDiv.innerHTML = '<p>There are no pending leave requests in this view.</p>';
+          listDiv.innerHTML = '<p class="text-color-secondary">There are no pending leave requests in this view.</p>';
           return;
         }
         
         let html = '';
-        try { // <-- NEW SAFETY TRY/CATCH
-          requests.forEach((req, index) => {
-            let balanceInfo = '';
-            if (req.requesterBalance) {
-              const balanceKey = req.leaveType.toLowerCase();
-              const daysLeft = req.requesterBalance[balanceKey];
-              balanceInfo = `<p class="balance-info">User has ${daysLeft} ${req.leaveType} days remaining.</p>`;
-            }
+        requests.forEach((req, index) => {
+          let balanceInfo = '';
+          if (req.requesterBalance) {
+            const balanceKey = req.leaveType.toLowerCase();
+            const daysLeft = req.requesterBalance[balanceKey];
+            balanceInfo = `<p class="supervisor-info text-color-secondary"><strong>Balance Check:</strong> ${daysLeft} ${req.leaveType} days remaining.</p>`;
+          }
         
-            html += `
-              <div class="request-list-item">
-                <div class="item-number">${index + 1}.</div>
-                <div class="item-details">
-                  <h4>${req.requestedByName} - ${req.leaveType}</h4>
-                  <p>
-                    <strong>Dates:</strong> ${formatDate(req.startDate)} to ${formatDate(req.endDate)}
-                    (${req.totalDays} ${req.totalDays > 1 ? 'days' : 'day'})
-                  </p>
-                  <p><strong>Submitted:</strong> ${formatDate(req.requestedDate)}</p>
-                  ${req.reason ? `<p><strong>Reason:</strong> ${req.reason}</p>` : ''}
-                  ${req.supervisorName ? `<p class="supervisor-info"><strong>Assigned to:</strong> ${req.supervisorName}</p>` : ''}
-                  ${balanceInfo} 
-                </div>
-                <div class="item-actions">
-                  <button class="approve-btn" onclick="approveDenyRequest('${req.requestID}', 'Approved')">Approve</button>
-                  <button class="deny-btn" onclick="approveDenyRequest('${req.requestID}', 'Denied')">Deny</button>
-                </div>
+          html += `
+            <div class="request-list-item">
+              <div class="item-details">
+                <h4>${req.requestedByName} - ${req.leaveType} Request (ID: ${req.requestID.slice(-5)})</h4>
+                <p>
+                  <strong>Dates:</strong> ${formatDate(req.startDate)} to ${formatDate(req.endDate)}
+                  (${req.totalDays} ${req.totalDays > 1 ? 'days' : 'day'})
+                </p>
+                <p><strong>Submitted:</strong> ${formatDate(req.requestedDate)}</p>
+                ${req.reason ? `<p><strong>Reason:</strong> ${req.reason}</p>` : ''}
+                <p class="supervisor-info text-color-secondary"><strong>Assigned Supervisor:</strong> ${req.supervisorName || 'N/A'}</p>
+                ${balanceInfo} 
               </div>
-            `;
-          });
-        } catch (e) {
-          listDiv.innerHTML = `<p style="color: red; font-weight: bold;">Error rendering list: ${e.message}</p>`;
-          return; // Stop execution
-        }
+              <div class="item-actions">
+                <button class="approve-btn" onclick="approveDenyRequest('${req.requestID}', 'Approved')">Approve</button>
+                <button class="deny-btn" onclick="approveDenyRequest('${req.requestID}', 'Denied')">Deny</button>
+              </div>
+            </div>
+          `;
+        });
         listDiv.innerHTML = html;
       }
       
       // --- Admin Approve/Deny Function ---
       function approveDenyRequest(requestID, newStatus) {
-        const statusDiv = document.getElementById('approval-status');
-        statusDiv.className = 'processing';
-        statusDiv.innerText = `Processing request...`;
+        setStatus('approval-status', 'processing', `Processing request...`);
         
         google.script.run
           .withSuccessHandler(msg => {
             if (msg.startsWith('Error:')) { 
-              statusDiv.className = 'error';
-              statusDiv.innerText = msg.replace('Error: ', '');
+              setStatus('approval-status', 'error', msg.replace('Error: ', ''));
             } else {
-              statusDiv.className = 'success';
-              statusDiv.innerText = msg;
+              setStatus('approval-status', 'success', msg);
             }
             const currentFilter = document.getElementById('filter-mine').classList.contains('active') ? 'mine' : 'all';
             loadPendingRequests(currentFilter);
-            loadMyRequests();
+            loadMyRequests(); // Update self requests
             google.script.run.withSuccessHandler(user => {
-              populateMyBalances(user.myBalances);
+              populateMyBalances(user.myBalances); // Update self balances
             }).getUserInfo();
           })
           .withFailureHandler(err => {
-            statusDiv.className = 'error';
-            statusDiv.innerText = err.message;
+            setStatus('approval-status', 'error', err.message);
           })
           .webApproveDenyRequest(requestID, newStatus);
       }
       
       // --- Load My Schedule ---
       function loadMySchedule() {
-        const statusDiv = document.getElementById('my-schedule-status');
-        const displayDiv = document.getElementById('my-schedule-display');
-        statusDiv.className = 'processing';
-        statusDiv.innerText = 'Loading your schedule...';
-        displayDiv.innerHTML = '';
+        setStatus('my-schedule-status', 'processing', 'Loading your schedule...');
+        document.getElementById('my-schedule-display').innerHTML = '';
 
         google.script.run
           .withSuccessHandler(populateMySchedule)
           .withFailureHandler(err => {
-            statusDiv.className = 'error';
-            statusDiv.innerText = err.message;
+            setStatus('my-schedule-status', 'error', err.message);
           })
           .webGetMySchedule();
       }
 
       // --- Populate My Schedule ---
       function populateMySchedule(scheduleData) {
-        const statusDiv = document.getElementById('my-schedule-status');
         const displayDiv = document.getElementById('my-schedule-display');
         
         if (scheduleData.error) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = scheduleData.error;
+          setStatus('my-schedule-status', 'error', scheduleData.error);
           return;
         }
         
         if (scheduleData.length === 0) {
-          statusDiv.className = 'success';
-          statusDiv.innerText = 'No schedule found for the next 7 days.';
+          setStatus('my-schedule-status', 'success', 'No schedule found for the next 7 days.');
           return;
         }
 
-        statusDiv.className = '';
-        statusDiv.innerText = '';
-        statusDiv.style.visibility = 'hidden';
+        setStatus('my-schedule-status', 'success', ''); // Clear status
 
         let html = `
           <table class="schedule-table">
@@ -1640,7 +1720,7 @@
         `;
 
         const today = new Date();
-        today.setHours(0,0,0,0); // Normalize today
+        today.setHours(0,0,0,0);
 
         scheduleData.forEach(day => {
           const scheduleDate = new Date(day.date);
@@ -1674,10 +1754,8 @@
         displayDiv.innerHTML = html;
       }
       
-      // --- Load History Report (MODIFIED) ---
+      // --- Load History Report ---
       function loadHistoryReport() {
-        const statusDiv = document.getElementById('my-history-status');
-        const displayDiv = document.getElementById('history-report-display');
         const startDate = document.getElementById('history-start-date').value;
         const endDate = document.getElementById('history-end-date').value;
         
@@ -1686,56 +1764,47 @@
         if (selfRole === 'admin' || selfRole === 'superadmin') {
           const selectedOptions = document.getElementById('history-user-select').selectedOptions;
           if (selectedOptions.length === 0) {
-            statusDiv.className = 'error';
-            statusDiv.innerText = 'Please select at least one user to view.';
+            setStatus('my-history-status', 'error', 'Please select at least one user to view.');
             return;
           }
           for (let option of selectedOptions) {
-            // Dropdown value is now email, find the name
             const user = allUsersList.find(u => u.email === option.value);
             if (user) targetUserNames.push(user.name);
           }
         } else {
-          // Agent is viewing their own
           targetUserNames.push(selfUserName);
         }
         
         if (!startDate || !endDate) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = 'Please select a Start and End date to view.';
+          setStatus('my-history-status', 'error', 'Please select a Start and End date to view.');
           return;
         }
         if (new Date(endDate) < new Date(startDate)) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = 'End Date cannot be before Start Date.';
+          setStatus('my-history-status', 'error', 'End Date cannot be before Start Date.');
           return;
         }
         
-        statusDiv.className = 'processing';
-        statusDiv.innerText = `Loading history for ${targetUserNames.length} user(s)...`;
-        displayDiv.innerHTML = '';
-        lastHistoryData = null; // Clear old export data
+        setStatus('my-history-status', 'processing', `Loading history for ${targetUserNames.length} user(s)...`);
+        document.getElementById('history-report-display').innerHTML = '';
+        lastHistoryData = null;
         document.getElementById('export-csv-btn').style.display = 'none';
         
         google.script.run
           .withSuccessHandler(data => {
             if (data.error) {
-              statusDiv.className = 'error';
-              statusDiv.innerText = data.error;
+              setStatus('my-history-status', 'error', data.error);
               return;
             }
             
-            statusDiv.className = 'success';
-            statusDiv.innerText = `Displaying ${data.length} record(s).`;
-            populateHistoryReport(data); // Call new table renderer
-            lastHistoryData = data; // Save for export
-            document.getElementById('export-csv-btn').style.display = 'inline-block'; // Show export button
+            setStatus('my-history-status', 'success', `Displaying ${data.length} record(s).`);
+            populateHistoryReport(data);
+            lastHistoryData = data;
+            document.getElementById('export-csv-btn').style.display = 'inline-block';
           })
           .withFailureHandler(err => {
-            statusDiv.className = 'error';
-            statusDiv.innerText = err.message;
+            setStatus('my-history-status', 'error', err.message);
           })
-          .webGetAdherenceRange(targetUserNames, startDate, endDate); // Call new backend function
+          .webGetAdherenceRange(targetUserNames, startDate, endDate);
       }
       
       // --- Populate History Report Table ---
@@ -1743,14 +1812,17 @@
         const displayDiv = document.getElementById('history-report-display');
         
         if (!data || data.length === 0) {
-          displayDiv.innerHTML = '<p>No adherence records found for the selected criteria.</p>';
+          displayDiv.innerHTML = '<p class="text-color-secondary">No adherence records found for the selected criteria.</p>';
           return;
         }
 
-        const ex = (value) => {
+        const formatExceed = (value, isPositive) => {
           if (!value || value === 'No' || value === 0) return '0';
           const seconds = parseInt(value, 10);
-          if (seconds > 0) return `<span class="highlight-red">${formatSeconds(seconds)}</span>`;
+          if (seconds > 0) {
+              const color = isPositive ? 'var(--google-green)' : '#ea4335';
+              return `<span style="font-weight: 600; color: ${color};">${formatSeconds(seconds)}</span>`;
+          }
           return '0';
         };
 
@@ -1783,11 +1855,11 @@
               <td>${row.leaveType || 'N/A'}</td>
               <td>${formatTime(row.login)}</td>
               <td>${formatTime(row.logout)}</td>
-              <td>${ex(row.tardy)}</td>
-              <td>${ex(row.earlyLeave)}</td>
-              <td><span class="highlight-green">${formatSeconds(row.overtime)}</span></td>
-              <td>${ex(totalBreakExceed)}</td>
-              <td>${ex(row.lunchExceed)}</td>
+              <td>${formatExceed(row.tardy, false)}</td>
+              <td>${formatExceed(row.earlyLeave, false)}</td>
+              <td>${formatExceed(row.overtime, true)}</td>
+              <td>${formatExceed(totalBreakExceed, false)}</td>
+              <td>${formatExceed(row.lunchExceed, false)}</td>
             </tr>
           `;
         });
@@ -1796,24 +1868,25 @@
         displayDiv.innerHTML = html;
       }
       
-      // --- Export to CSV (for new multi-day format) ---
+      // --- Export to CSV ---
       function exportHistoryToCSV() {
         if (!lastHistoryData || lastHistoryData.length === 0) {
-          alert("No data to export. Please 'View History' first.");
+          // Use alert() for this specific case as a fallback, but a modal would be preferred.
+          // Using a simple notification here instead of alert().
+          setStatus('my-history-status', 'error', "No data to export. Please 'View History' first.");
           return;
         }
         
         let csvContent = "data:text/csv;charset=utf-8,";
-        // Add headers
         csvContent += "User,Date,Status,Login,Logout,Tardy (sec),Early Leave (sec),Overtime (sec),1st Break Exceed (sec),Lunch Exceed (sec),Last Break Exceed (sec)\r\n";
         
         lastHistoryData.forEach(data => {
           let row = [
-            data.userName,
-            formatDate(data.date),
-            data.leaveType || 'N/A',
-            formatTime(data.login),
-            formatTime(data.logout),
+            `"${data.userName}"`,
+            `"${formatDate(data.date)}"`,
+            `"${data.leaveType || 'N/A'}"`,
+            `"${formatTime(data.login)}"`,
+            `"${formatTime(data.logout)}"`,
             data.tardy || 0,
             data.earlyLeave || 0,
             data.overtime || 0,
@@ -1835,7 +1908,6 @@
       
       // --- Submit Manual Punch ---
       function submitManualPunch() {
-        const statusDiv = document.getElementById('manual-punch-status');
         try {
           const userEmail = document.getElementById('manual-punch-user').value;
           const user = allUsersList.find(u => u.email === userEmail);
@@ -1851,17 +1923,14 @@
           
           const timestamp = new Date(date + 'T' + time).toISOString();
           
-          statusDiv.className = 'processing';
-          statusDiv.innerText = `Processing "${action}" for ${user.name}...`;
+          setStatus('manual-punch-status', 'processing', `Processing "${action}" for ${user.name}...`);
           
           google.script.run
             .withSuccessHandler(msg => {
               if (msg.startsWith('Error:')) {
-                statusDiv.className = 'error';
-                statusDiv.innerText = msg.replace('Error: ', '');
+                setStatus('manual-punch-status', 'error', msg.replace('Error: ', ''));
               } else {
-                statusDiv.className = 'success';
-                statusDiv.innerText = msg;
+                setStatus('manual-punch-status', 'success', msg);
                 document.getElementById('manual-punch-form').reset();
                 document.getElementById('manual-punch-date').valueAsDate = new Date();
                 document.getElementById('manual-punch-user').selectedIndex = 0;
@@ -1869,32 +1938,27 @@
               }
             })
             .withFailureHandler(err => {
-              statusDiv.className = 'error';
-              statusDiv.innerText = err.message;
+              setStatus('manual-punch-status', 'error', err.message);
             })
             .webPunch(action, user.name, timestamp); 
             
         } catch(err) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = err.message;
+          setStatus('manual-punch-status', 'error', err.message);
         }
       }
       
-      // --- Submit Admin Leave Request (UPDATED) ---
+      // --- Submit Admin Leave Request ---
       function submitAdminLeaveRequest() {
-        const statusDiv = document.getElementById('admin-leave-status');
         try {
           const userEmail = document.getElementById('admin-leave-user').value;
           const user = allUsersList.find(u => u.email === userEmail);
           if (!user) throw new Error("Please select a user.");
           
-          // const supervisorEmail = document.getElementById('admin-leave-supervisor').value; // REMOVED
           const leaveType = document.getElementById('admin-leave-type').value;
           const startDate = document.getElementById('admin-leave-start-date').value;
           let endDate = document.getElementById('admin-leave-end-date').value;
           const reason = document.getElementById('admin-leave-reason').value;
 
-          // if (!supervisorEmail) throw new Error("Please select a supervisor."); // REMOVED
           if (!startDate) throw new Error("Please select a Start Date.");
           if (!endDate) endDate = startDate; 
           
@@ -1903,49 +1967,39 @@
           }
           
           const requestObject = {
-            // supervisorEmail: supervisorEmail, // REMOVED
             leaveType: leaveType,
             startDate: startDate,
             endDate: endDate,
             reason: reason
           };
           
-          statusDiv.className = 'processing';
-          statusDiv.innerText = `Submitting request for ${user.name}...`;
+          setStatus('admin-leave-status', 'processing', `Submitting request for ${user.name}...`);
           
           google.script.run
             .withSuccessHandler(msg => {
               if (msg.startsWith('Error:')) { 
-                statusDiv.className = 'error';
-                statusDiv.innerText = msg.replace('Error: ', '');
+                setStatus('admin-leave-status', 'error', msg.replace('Error: ', ''));
               } else {
-                statusDiv.className = 'success';
-                statusDiv.innerText = msg;
+                setStatus('admin-leave-status', 'success', msg);
                 document.getElementById('admin-leave-form').reset();
                 document.getElementById('admin-leave-start-date').valueAsDate = new Date();
                 
-                // --- THIS IS THE FIX ---
-                // Refresh admin's pending list
                 const currentFilter = document.getElementById('filter-mine').classList.contains('active') ? 'mine' : 'all';
                 loadPendingRequests(currentFilter);
-                // --- END FIX ---
               }
             })
             .withFailureHandler(err => {
-              statusDiv.className = 'error';
-              statusDiv.innerText = err.message;
+              setStatus('admin-leave-status', 'error', err.message);
             })
-            .webSubmitLeaveRequest(requestObject, user.email); // Pass target user email
+            .webSubmitLeaveRequest(requestObject, user.email);
           
         } catch (err) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = err.message;
+          setStatus('admin-leave-status', 'error', err.message);
         }
       }
       
       // --- Submit Balance Adjustment ---
       function submitBalanceAdjustment() {
-        const statusDiv = document.getElementById('balance-adjust-status');
         try {
           const userEmail = document.getElementById('balance-user-select').value;
           const user = allUsersList.find(u => u.email === userEmail);
@@ -1958,41 +2012,34 @@
           if (isNaN(amount) || amount === 0) throw new Error("Please enter a valid, non-zero amount.");
           if (!reason) throw new Error("A reason is required for all adjustments.");
 
-          statusDiv.className = 'processing';
-          statusDiv.innerText = `Adjusting ${leaveType} balance for ${user.name}...`;
+          setStatus('balance-adjust-status', 'processing', `Adjusting ${leaveType} balance for ${user.name}...`);
 
           google.script.run
             .withSuccessHandler(msg => {
               if (msg.startsWith('Error:')) { 
-                statusDiv.className = 'error';
-                statusDiv.innerText = msg.replace('Error: ', '');
+                setStatus('balance-adjust-status', 'error', msg.replace('Error: ', ''));
               } else {
-                statusDiv.className = 'success';
-                statusDiv.innerText = msg;
+                setStatus('balance-adjust-status', 'success', msg);
                 document.getElementById('balance-adjustment-form').reset();
               }
             })
             .withFailureHandler(err => {
-              statusDiv.className = 'error';
-              statusDiv.innerText = err.message;
+              setStatus('balance-adjust-status', 'error', err.message);
             })
             .webAdjustLeaveBalance(user.email, leaveType, amount, reason);
 
         } catch (err) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = err.message;
+          setStatus('balance-adjust-status', 'error', err.message);
         }
       }
       
       // --- Import Schedule CSV ---
       function importScheduleCSV() {
-        const statusDiv = document.getElementById('csv-import-status');
         const fileInput = document.getElementById('csv-file-input');
         const file = fileInput.files[0];
 
         if (!file) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = 'Please select a CSV file to import.';
+          setStatus('csv-import-status', 'error', 'Please select a CSV file to import.');
           return;
         }
 
@@ -2002,43 +2049,35 @@
           const data = parseCSV(text);
           
           if (!data || data.length === 0) {
-            statusDiv.className = 'error';
-            statusDiv.innerText = 'File is empty or invalid. Could not parse any rows.';
+            setStatus('csv-import-status', 'error', 'File is empty or invalid. Could not parse any rows.');
             return;
           }
 
-          // Validate headers
           const headers = data[0];
           if (!headers.Name || !headers.Date || !headers.Email) {
-            statusDiv.className = 'error';
-            statusDiv.innerText = 'Invalid CSV format. Must include headers: Name, Date, Email. (StartTime, EndTime, LeaveType are optional)';
+            setStatus('csv-import-status', 'error', 'Invalid CSV format. Must include headers: Name, Date, Email. (StartTime, EndTime, LeaveType are optional)');
             return;
           }
 
-          statusDiv.className = 'processing';
-          statusDiv.innerText = `Importing ${data.length} schedule records...`;
+          setStatus('csv-import-status', 'processing', `Importing ${data.length} schedule records...`);
 
           google.script.run
             .withSuccessHandler(msg => {
               if (msg.startsWith('Error:')) { 
-                statusDiv.className = 'error';
-                statusDiv.innerText = msg.replace('Error: ', '');
+                setStatus('csv-import-status', 'error', msg.replace('Error: ', ''));
               } else {
-                statusDiv.className = 'success';
-                statusDiv.innerText = msg;
-                fileInput.value = ''; // Clear the file input
+                setStatus('csv-import-status', 'success', msg);
+                fileInput.value = '';
               }
             })
             .withFailureHandler(err => {
-              statusDiv.className = 'error';
-              statusDiv.innerText = err.message;
+              setStatus('csv-import-status', 'error', err.message);
             })
             .webImportScheduleCSV(data);
         };
         
         reader.onerror = function(e) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = 'Error reading file: ' + e.message;
+          setStatus('csv-import-status', 'error', 'Error reading file: ' + e.message);
         };
 
         reader.readAsText(file);
@@ -2047,28 +2086,28 @@
       // --- Simple CSV Parser ---
       function parseCSV(csvText) {
         const lines = csvText.split(/\r\n|\n/).filter(line => line.trim() !== '');
-        if (lines.length < 2) return []; // Need header and at least one data row
+        if (lines.length < 2) return [];
 
         const headers = lines[0].split(',').map(h => h.trim());
         const result = [];
 
         for (let i = 1; i < lines.length; i++) {
-          const values = lines[i].split(',');
+          const values = lines[i].split(',').map(v => v.trim());
           const obj = {};
           for (let j = 0; j < headers.length; j++) {
-            obj[headers[j]] = values[j] ? values[j].trim() : '';
+            obj[headers[j]] = values[j] || '';
           }
           result.push(obj);
         }
         return result;
       }
 
-      // --- Dashboard Functions (UPDATED) ---
+      // --- Dashboard Functions ---
       function getSelectedDashboardUsers() {
         const select = document.getElementById('dashboard-user-select');
-        const selectedUsers = Array.from(select.selectedOptions).map(opt => opt.value); // These are emails
+        const selectedUsers = Array.from(select.selectedOptions).map(opt => opt.value);
         if (selectedUsers.length === 0) {
-          return ['ALL_USERS']; // Use 'ALL_USERS' to signal "My Team" or "All"
+          return ['ALL_USERS'];
         }
         return selectedUsers;
       }
@@ -2078,13 +2117,11 @@
           google.charts.setOnLoadCallback(loadDashboard);
           return;
         }
-        const statusDiv = document.getElementById('dashboard-status');
         const userEmails = getSelectedDashboardUsers();
         const date = document.getElementById('dashboard-date').value;
         
         if (!date) {
-           statusDiv.className = 'error';
-           statusDiv.innerText = 'Please select a date for the dashboard.';
+           setStatus('dashboard-status', 'error', 'Please select a date for the dashboard.');
            return;
         }
         
@@ -2094,23 +2131,19 @@
            document.getElementById('dashboard-title').innerText = `Dashboard for ${userEmails.length} User(s) (${formatDate(date)})`;
         }
         
-        statusDiv.className = 'processing';
-        statusDiv.innerText = 'Loading dashboard data...';
+        setStatus('dashboard-status', 'processing', 'Loading dashboard data...');
         
         google.script.run
           .withSuccessHandler(drawDashboard)
           .withFailureHandler(err => {
-            statusDiv.className = 'error';
-            statusDiv.innerText = err.message;
+            setStatus('dashboard-status', 'error', err.message);
           })
-          .webGetDashboardData(userEmails, date); // Send selected user emails and date
+          .webGetDashboardData(userEmails, date);
       }
       
       function drawDashboard(data) {
         if (!data || data.error) {
-          document.getElementById('dashboard-status').className = 'error';
-          document.getElementById('dashboard-status').innerText = data.error || 'Failed to load dashboard data.';
-          // Clear old charts
+          setStatus('dashboard-status', 'error', data.error || 'Failed to load dashboard data.');
           document.getElementById('status-pie-chart').innerHTML = '';
           document.getElementById('adherence-bar-chart').innerHTML = '';
           document.getElementById('pending-leave-table').innerHTML = '';
@@ -2118,15 +2151,21 @@
           return;
         }
         
-        document.getElementById('dashboard-status').className = 'success';
-        document.getElementById('dashboard-status').innerText = 'Dashboard loaded successfully.';
+        setStatus('dashboard-status', 'success', 'Dashboard loaded successfully.');
         
         // 1. Draw Status Pie Chart
         const statusData = new google.visualization.DataTable();
         statusData.addColumn('string', 'Status');
         statusData.addColumn('number', 'Count');
         statusData.addRows(data.statusCounts);
-        const pieOptions = { title: 'Current User Status', pieHole: 0.4, };
+        const pieOptions = { 
+          title: 'Current User Status', 
+          pieHole: 0.4, 
+          legend: { position: 'bottom' },
+          backgroundColor: 'transparent',
+          titleTextStyle: { color: document.body.classList.contains('dark-mode') ? '#f4f7f6' : '#2101cd' },
+          legendTextStyle: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#5f6368' }
+        };
         const pieChart = new google.visualization.PieChart(document.getElementById('status-pie-chart'));
         pieChart.draw(statusData, pieOptions);
 
@@ -2135,19 +2174,30 @@
         adherenceData.addColumn('string', 'Metric');
         adherenceData.addColumn('number', 'Minutes');
         adherenceData.addRows([
-          ['Total Tardy', data.totalAdherenceMetrics.totalTardy / 60],
-          ['Total Early Leave', data.totalAdherenceMetrics.totalEarlyLeave / 60],
-          ['Total Break Exceed', data.totalAdherenceMetrics.totalBreakExceed / 60],
-          ['Total Lunch Exceed', data.totalAdherenceMetrics.totalLunchExceed / 60]
+          ['Tardy', data.totalAdherenceMetrics.totalTardy / 60],
+          ['Early Leave', data.totalAdherenceMetrics.totalEarlyLeave / 60],
+          ['Break Exceed', data.totalAdherenceMetrics.totalBreakExceed / 60],
+          ['Lunch Exceed', data.totalAdherenceMetrics.totalLunchExceed / 60]
         ]);
         const barOptions = {
           title: 'Total Adherence Deviations (in Minutes)',
           legend: { position: 'none' },
+          backgroundColor: 'transparent',
+          titleTextStyle: { color: document.body.classList.contains('dark-mode') ? '#f4f7f6' : '#2101cd' },
+          vAxis: { 
+            title: 'Minutes', 
+            titleTextStyle: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#5f6368' },
+            textStyle: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#5f6368' },
+            gridlines: { color: document.body.classList.contains('dark-mode') ? '#444' : '#e0e0e0' }
+          },
+          hAxis: {
+            textStyle: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#5f6368' }
+          }
         };
         const barChart = new google.visualization.BarChart(document.getElementById('adherence-bar-chart'));
         barChart.draw(adherenceData, barOptions);
         
-        // 3. NEW: Draw Adherence Detail Table
+        // 3. Draw Adherence Detail Table
         const detailTableData = new google.visualization.DataTable();
         detailTableData.addColumn('string', 'User');
         detailTableData.addColumn('string', 'Tardy');
@@ -2165,7 +2215,21 @@
             formatSeconds(user.lunchExceed)
           ];
         }));
-        const detailTableOptions = { showRowNumber: true, width: '100%', height: '100%', allowHtml: true, cssClassNames: { tableCell: 'report-table-cell', headerCell: 'report-table-header' } };
+        const detailTableOptions = { 
+          showRowNumber: true, 
+          width: '100%', 
+          height: '100%', 
+          allowHtml: true, 
+          cssClassNames: { 
+            headerRow: 'report-table th', 
+            tableRow: 'report-table tr', 
+            oddTableRow: 'report-table tr',
+            selectedTableRow: 'report-table tr',
+            hoverTableRow: 'report-table tr:hover',
+            tableCell: 'report-table td', 
+            headerCell: 'report-table th' 
+          } 
+        };
         const detailTable = new google.visualization.Table(document.getElementById('adherence-detail-table'));
         detailTable.draw(detailTableData, detailTableOptions);
 
@@ -2176,79 +2240,67 @@
         tableData.addColumn('string', 'Type');
         tableData.addColumn('string', 'Start Date');
         tableData.addColumn('number', 'Days');
-        // --- THIS IS THE FIX ---
-        // The backend is now sending an OBJECT, not an array
         tableData.addRows(data.pendingRequests.map(req => {
           return [req.name, req.type, formatDate(req.startDate), req.days];
         }));
-        // --- END FIX ---
-        const tableOptions = { title: 'Pending Leave', showRowNumber: true, width: '100%', height: '100%' };
+        const tableOptions = { 
+          title: 'Pending Leave', 
+          showRowNumber: true, 
+          width: '100%', 
+          height: '100%',
+          backgroundColor: 'transparent',
+          titleTextStyle: { color: document.body.classList.contains('dark-mode') ? '#f4f7f6' : '#2101cd' },
+        };
         const table = new google.visualization.Table(document.getElementById('pending-leave-table'));
         table.draw(tableData, tableOptions);
       }
       
       function saveMyTeam() {
         const select = document.getElementById('dashboard-user-select');
-        const selectedUsers = Array.from(select.selectedOptions).map(opt => opt.value); // These are emails
-        const statusDiv = document.getElementById('dashboard-status');
+        const selectedUsers = Array.from(select.selectedOptions).map(opt => opt.value);
         
         if (selectedUsers.length === 0) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = 'Please select at least one user to save as your team.';
+          setStatus('dashboard-status', 'error', 'Please select at least one user to save as your team.');
           return;
         }
         
-        statusDiv.className = 'processing';
-        statusDiv.innerText = 'Saving "My Team"...';
+        setStatus('dashboard-status', 'processing', 'Saving "My Team"...');
         
         google.script.run
           .withSuccessHandler(msg => {
-            statusDiv.className = 'success';
-            statusDiv.innerText = msg;
+            setStatus('dashboard-status', 'success', msg);
           })
           .withFailureHandler(err => {
-            statusDiv.className = 'error';
-            statusDiv.innerText = err.message;
+            setStatus('dashboard-status', 'error', err.message);
           })
-          .webSaveMyTeam(selectedUsers); // Send emails
+          .webSaveMyTeam(selectedUsers);
       }
       
-      // --- UPDATED: This function NO LONGER auto-loads the dashboard ---
       function loadMyTeam(autoLoadDashboard = false) { 
-        const statusDiv = document.getElementById('dashboard-status');
-        statusDiv.className = 'processing';
-        statusDiv.innerText = 'Loading "My Team"...';
+        setStatus('dashboard-status', 'processing', 'Loading "My Team"...');
         
         google.script.run
           .withSuccessHandler(teamEmails => {
+            const select = document.getElementById('dashboard-user-select');
             if (teamEmails && teamEmails.length > 0) {
-              const select = document.getElementById('dashboard-user-select');
               Array.from(select.options).forEach(option => {
                 option.selected = teamEmails.includes(option.value);
               });
-              statusDiv.className = 'success';
-              statusDiv.innerText = 'Loaded "My Team". Click "Load Dashboard" to view.';
-              // --- FIX: Call loadDashboard ONLY if it's the first page load ---
-              if (autoLoadDashboard) {
-                loadDashboard();
-              }
+              setStatus('dashboard-status', 'success', 'Loaded "My Team". Click "Load Dashboard" to view.');
             } else {
-              statusDiv.className = 'success';
-              statusDiv.innerText = 'No "My Team" saved. Select users and click "Load Dashboard".';
-              if (autoLoadDashboard) {
-                loadDashboard(); // Load default
-              }
+              // If no team is saved, select nothing (which defaults to 'ALL_USERS' in loadDashboard logic)
+              Array.from(select.options).forEach(option => {
+                option.selected = false;
+              });
+              setStatus('dashboard-status', 'success', 'No "My Team" saved. Select users and click "Load Dashboard".');
             }
             
-            // --- FIX: This is what was missing. ---
-            // After loading the team, we must load the dashboard.
             if (!autoLoadDashboard) {
               loadDashboard();
             }
           })
           .withFailureHandler(err => {
-            statusDiv.className = 'error';
-            statusDiv.innerText = err.message;
+            setStatus('dashboard-status', 'error', err.message);
             if (autoLoadDashboard) {
               loadDashboard();
             }
@@ -2256,9 +2308,8 @@
           .webGetMyTeam();
       }
 
-      // --- NEW: Submit Reporting Line Change ---
+      // --- Submit Reporting Line Change ---
       function submitReportingLineChange() {
-        const statusDiv = document.getElementById('reporting-line-status');
         try {
           const userEmail = document.getElementById('reporting-line-user').value;
           const newSupervisorEmail = document.getElementById('reporting-line-supervisor').value;
@@ -2267,26 +2318,24 @@
           if (!newSupervisorEmail) throw new Error("Please select a new supervisor.");
           if (userEmail === newSupervisorEmail) throw new Error("A user cannot be their own supervisor.");
 
-          statusDiv.className = 'processing';
-          statusDiv.innerText = 'Processing reporting line change...';
+          setStatus('reporting-line-status', 'processing', 'Processing reporting line change...');
 
           google.script.run
             .withSuccessHandler(msg => {
-              statusDiv.className = 'success';
-              statusDiv.innerText = msg;
-              // Clear form
-              document.getElementById('reporting-line-user').selectedIndex = 0;
-              document.getElementById('reporting-line-supervisor').selectedIndex = 0;
+              if (msg.startsWith('Error:')) {
+                setStatus('reporting-line-status', 'error', msg.replace('Error: ', ''));
+              } else {
+                setStatus('reporting-line-status', 'success', msg);
+                document.getElementById('reporting-line-form').reset();
+              }
             })
             .withFailureHandler(err => {
-              statusDiv.className = 'error';
-              statusDiv.innerText = err.message;
+              setStatus('reporting-line-status', 'error', err.message);
             })
             .webUpdateReportingLine(userEmail, newSupervisorEmail);
 
         } catch (err) {
-          statusDiv.className = 'error';
-          statusDiv.innerText = err.message;
+          setStatus('reporting-line-status', 'error', err.message);
         }
       }
 
@@ -2299,7 +2348,8 @@
         document.getElementById('history-end-date').valueAsDate = new Date(); 
         document.getElementById('manual-punch-date').valueAsDate = new Date(); 
         document.getElementById('admin-leave-start-date').valueAsDate = new Date(); 
-        document.getElementById('dashboard-date').valueAsDate = new Date(); // NEW: Set dashboard date
+        document.getElementById('dashboard-date').valueAsDate = new Date();
+        toggleTimeFields(); // Initial call to set time fields correctly
       });
     </script>
   </body>
