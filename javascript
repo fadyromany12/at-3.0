@@ -199,6 +199,9 @@ function webSubmitCoaching(sessionObject) {
 
     const sessionID = `CS-${new Date().getTime()}`; // Simple unique ID
     const sessionDate = new Date(sessionObject.sessionDate + 'T00:00:00');
+    // *** NEW: Handle FollowUpDate ***
+    const followUpDate = sessionObject.followUpDate ? new Date(sessionObject.followUpDate + 'T00:00:00') : null;
+    const followUpStatus = followUpDate ? "Pending" : ""; // Set to pending if date exists
 
     // 1. Log the main session
     sessionSheet.appendRow([
@@ -211,7 +214,9 @@ function webSubmitCoaching(sessionObject) {
       sessionObject.weekNumber,
       sessionObject.overallScore,
       sessionObject.followUpComment,
-      new Date() // Timestamp of submission
+      new Date(), // Timestamp of submission
+      followUpDate || "", // *** NEW: Add follow-up date ***
+      followUpStatus  // *** NEW: Add follow-up status ***
     ]);
 
     // 2. Log the individual scores
@@ -276,8 +281,10 @@ function webGetCoachingHistory(filter) { // filter is unused for now, but good p
       myTeamList.forEach(email => myTeamEmails.add(email.toLowerCase()));
     }
 
-    for (let i = allSessions.length - 1; i > 0; i--) { // Go backwards
+    for (let i = allSessions.length - 1; i >= 0; i--) { // Go backwards from allSessions.length - 1, and include i=0
       const session = allSessions[i];
+      if (!session || !session.AgentEmail) continue; // Skip empty/invalid rows
+
       const agentEmail = session.AgentEmail.toLowerCase();
 
       let canView = false;
@@ -300,7 +307,10 @@ function webGetCoachingHistory(filter) { // filter is unused for now, but good p
           sessionDate: convertDateToString(new Date(session.SessionDate)),
           weekNumber: session.WeekNumber,
           overallScore: session.OverallScore,
-          followUpComment: session.FollowUpComment
+          followUpComment: session.FollowUpComment,
+          // *** NEW: Return follow-up info ***
+          followUpDate: convertDateToString(new Date(session.FollowUpDate)),
+          followUpStatus: session.FollowUpStatus
         });
       }
     }
@@ -471,7 +481,7 @@ function webGetAllSubordinateEmails(managerEmail) {
                     allSubordinates.add(reportEmail);
                     // If the report is a manager, add them to the queue to find their reports
                     if (userData.emailToRole[reportEmail] !== 'agent') {
-                        queue.push(reportEmail);
+                push(reportEmail);
                     }
                 }
             });
@@ -596,7 +606,7 @@ function punch(action, targetUserName, puncherEmail, adminTimestamp) { 
         shiftEndStr = Utilities.formatDate(schEnd, timeZone, "HH:mm:ss");
       } else {
         shiftEndStr = (schEnd || "").toString(); 
-      }
+  S     }
           
       leaveType = (schLeave || "").toString().trim();
       break;
@@ -1034,12 +1044,14 @@ function getOrCreateSheet(ss, name) {
     } 
     // +++ ADDED NEW SHEET DEFINITIONS +++
     else if (name === SHEET_NAMES.coachingSessions) { 
-      sheet.getRange("A1:J1").setValues([[
+      sheet.getRange("A1:L1").setValues([[ // *** CHANGED from J1 to L1 ***
         "SessionID", "AgentEmail", "AgentName", "CoachEmail", "CoachName",
-        "SessionDate", "WeekNumber", "OverallScore", "FollowUpComment", "SubmissionTimestamp"
+        "SessionDate", "WeekNumber", "OverallScore", "FollowUpComment", "SubmissionTimestamp",
+        "FollowUpDate", "FollowUpStatus" // *** ADDED NEW COLUMNS ***
       ]]);
       sheet.getRange("F:F").setNumberFormat("mm/dd/yyyy");
       sheet.getRange("J:J").setNumberFormat("mm/dd/yyyy hh:mm:ss");
+      sheet.getRange("K:K").setNumberFormat("mm/dd/yyyy"); // *** ADDED FORMAT for K ***
     } else if (name === SHEET_NAMES.coachingScores) { 
       sheet.getRange("A1:E1").setValues([[
         "SessionID", "Category", "Criteria", "Score", "Comment"
@@ -1154,7 +1166,7 @@ function dailyLeaveSweeper() {
         logsSheet.appendRow([new Date(), userName, schEmail, "Auto-Log Leave", leaveType]);
         missedLogs++;
         
-        // Add to lookup so we don't process them again if they have duplicate schedules
+  _       // Add to lookup so we don't process them again if they have duplicate schedules
         adherenceLookup.add(lookupKey); 
       }
     } catch (e) {
@@ -1533,6 +1545,9 @@ function getMySchedule(userEmail) {
   const nextSevenDays = new Date(today);
   nextSevenDays.setDate(today.getDate() + 7);
   
+  // *** NEW: DEBUG LOGGING ***
+  Logger.log(`getMySchedule for ${userEmail}: Today: ${today.toISOString()}, 7-Day-Cutoff: ${nextSevenDays.toISOString()}`);
+
   const mySchedule = [];
   
   for (let i = 1; i < scheduleData.length; i++) {
@@ -1541,8 +1556,14 @@ function getMySchedule(userEmail) {
     
     if (schEmail === userEmail) {
       try {
+        // *** NEW: DEBUG LOGGING ***
+        Logger.log(`Checking row ${i+1}: Email: ${schEmail}, Date: ${row[1]}, IsMatch: ${schEmail === userEmail}`);
         const schDate = new Date(row[1]);
-        if (schDate >= today && schDate < nextSevenDays) {
+        
+        // *** NEW: DEBUG LOGGING ***
+        Logger.log(`DateCheck: ${schDate.toISOString()} >= ${today.toISOString()} && ${schDate.toISOString()} < ${nextSevenDays.toISOString()} = ${schDate >= today && schDate < nextSevenDays}`);
+
+        if (schDate >= today && schDate < nextSevenDays) { 
           
           let startTime = row[2];
           let endTime = row[3];
@@ -1552,7 +1573,7 @@ function getMySchedule(userEmail) {
           }
           if (endTime instanceof Date) {
             endTime = Utilities.formatDate(endTime, timeZone, "HH:mm");
-D         }
+          }
           
           mySchedule.push({
             date: convertDateToString(schDate),
@@ -1851,10 +1872,10 @@ function getDashboardData(adminEmail, userEmails, date) {
             const lastOther = userLastOtherCode[userEmail.toLowerCase()];
             if (lastOther && lastOther.type === 'In') {
               agentStatus = "On Break/Other"; // Combined status
-s           } else {
+            } else {
               // If not in Other Code, check breaks
               if (b1_in && !b1_out) agentStatus = "On Break/Other";
-              if (l_in && !l_out) agentStatus = "On Break/Other";
+               if (l_in && !l_out) agentStatus = "On Break/Other";
               if (b2_in && !b2_out) agentStatus = "On Break/Other";
             }
           } else if (login && logout) {
@@ -1930,7 +1951,7 @@ s           } else {
   return {
     statusCounts: statusCounts,
     totalAdherenceMetrics: totalAdherenceMetrics, // Renamed for clarity
-    individualAdherenceMetrics: individualAdherenceMetrics, // NEW
+   individualAdherenceMetrics: individualAdherenceMetrics, // NEW
     pendingRequests: pendingRequests
   };
 }
@@ -1958,7 +1979,7 @@ function getMyTeam(adminEmail) {
     Logger.log("Failed to load team preferences: " + e.message);
     // Throwing an error here would break the dashboard's initial load. 
     // We return an empty array instead, and let the front-end handle the fallback.
-    return [];
+   return [];
   }
 }
 
