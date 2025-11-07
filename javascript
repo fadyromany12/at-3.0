@@ -164,6 +164,175 @@ function webUpdateReportingLine(userEmail, newSupervisorEmail) {
     return "Error: " + err.message;
   }
 }
+
+// === NEW: Web App API for Manager Hierarchy ===
+function webGetManagerHierarchy() {
+  try {
+    const managerEmail = Session.getActiveUser().getEmail().toLowerCase();
+    const ss = getSpreadsheet();
+    const dbSheet = getOrCreateSheet(ss, SHEET_NAMES.database);
+    const userData = getUserDataFromDb(dbSheet);
+    
+    const managerRole = userData.emailToRole[managerEmail] || 'agent';
+    if (managerRole === 'agent') {
+      return { error: "Permission denied. Only managers can view the hierarchy." };
+    }
+    
+    // --- Step 1: Build the direct reporting map (Supervisor -> [Subordinates]) ---
+    const reportsMap = {};
+    const userEmailMap = {}; // Map email -> {name, role}
+
+    userData.userList.forEach(user => {
+      userEmailMap[user.email] = { name: user.name, role: user.role };
+      const supervisorEmail = user.supervisor;
+      
+      if (supervisorEmail) {
+        if (!reportsMap[supervisorEmail]) {
+          reportsMap[supervisorEmail] = [];
+        }
+        reportsMap[supervisorEmail].push(user.email);
+      }
+    });
+
+    // --- Step 2: Recursive function to build the tree (Hierarchy) ---
+    // MODIFIED: Added `visited` Set to track users in the current path.
+    function buildHierarchy(currentEmail, depth = 0, visited = new Set()) {
+      const user = userEmailMap[currentEmail];
+      
+      // If the email doesn't map to a user, it's likely a blank entry in the DB, so return null
+      if (!user) return null; 
+      
+      // CRITICAL CHECK: Detect circular reference
+      if (visited.has(currentEmail)) {
+        Logger.log(`Circular reference detected at user: ${currentEmail}`);
+        return {
+          email: currentEmail,
+          name: user.name,
+          role: user.role,
+          subordinates: [],
+          circularError: true
+        };
+      }
+      
+      // Add current user to visited set for this path
+      const newVisited = new Set(visited).add(currentEmail);
+
+
+      const subordinates = reportsMap[currentEmail] || [];
+      
+      // Separate managers/admins from agents
+      const adminSubordinates = subordinates
+        .filter(email => userData.emailToRole[email] === 'admin' || userData.emailToRole[email] === 'superadmin')
+        .map(email => buildHierarchy(email, depth + 1, newVisited))
+        .filter(s => s !== null); // Build sub-teams for managers
+
+      const agentSubordinates = subordinates
+        .filter(email => userData.emailToRole[email] === 'agent')
+        .map(email => ({
+          email: email,
+          name: userEmailMap[email].name,
+          role: userEmailMap[email].role,
+          subordinates: [] // Agents have no subordinates
+        }));
+        
+      // Combine and sort: Managers first, then Agents, then alphabetically
+      const combinedSubordinates = [...adminSubordinates, ...agentSubordinates];
+      
+      combinedSubordinates.sort((a, b) => {
+          // Sort by role (manager/admin first)
+          const aIsManager = a.role !== 'agent';
+          const bIsManager = b.role !== 'agent';
+          
+          if (aIsManager && !bIsManager) return -1;
+          if (!aIsManager && bIsManager) return 1;
+          
+          // Then sort by name
+          return a.name.localeCompare(b.name);
+      });
+
+
+      return {
+        email: currentEmail,
+        name: user.name,
+        role: user.role,
+        subordinates: combinedSubordinates,
+        depth: depth
+      };
+    }
+
+    // Start building the hierarchy from the manager's email
+    const hierarchy = buildHierarchy(managerEmail);
+    
+    // Check if the root node returned a circular error
+    if (hierarchy && hierarchy.circularError) {
+        throw new Error("Critical Error: Circular reporting line detected at the top level.");
+    }
+
+    return hierarchy;
+
+  } catch (err) {
+    Logger.log("webGetManagerHierarchy Error: " + err.message);
+    throw new Error(err.message);
+  }
+}
+
+// === NEW: Web App API to get all reports (flat list) ===
+function webGetAllSubordinateEmails(managerEmail) {
+    try {
+        const ss = getSpreadsheet();
+        const dbSheet = getOrCreateSheet(ss, SHEET_NAMES.database);
+        const userData = getUserDataFromDb(dbSheet);
+        
+        const managerRole = userData.emailToRole[managerEmail] || 'agent';
+        if (managerRole === 'agent') {
+            throw new Error("Permission denied.");
+        }
+        
+        // --- Build the direct reporting map ---
+        const reportsMap = {};
+        userData.userList.forEach(user => {
+            const supervisorEmail = user.supervisor;
+            if (supervisorEmail) {
+                if (!reportsMap[supervisorEmail]) {
+                    reportsMap[supervisorEmail] = [];
+                }
+                reportsMap[supervisorEmail].push(user.email);
+            }
+        });
+        
+        const allSubordinates = new Set();
+        const queue = [managerEmail];
+        
+        // Use a set to track users we've already processed (including the manager him/herself)
+        const processed = new Set();
+        
+        while (queue.length > 0) {
+            const currentEmail = queue.shift();
+            
+            // Check for processing loop (shouldn't happen in BFS, but safe check)
+            if (processed.has(currentEmail)) continue;
+            processed.add(currentEmail);
+
+            const directReports = reportsMap[currentEmail] || [];
+            
+            directReports.forEach(reportEmail => {
+                if (!allSubordinates.has(reportEmail)) {
+                    allSubordinates.add(reportEmail);
+                    // If the report is a manager, add them to the queue to find their reports
+                    if (userData.emailToRole[reportEmail] !== 'agent') {
+                        queue.push(reportEmail);
+                    }
+                }
+            });
+        }
+        
+        return Array.from(allSubordinates);
+
+    } catch (err) {
+        Logger.log("webGetAllSubordinateEmails Error: " + err.message);
+        return [];
+    }
+}
 // --- END OF WEB APP API SECTION ---
 
 
@@ -1375,19 +1544,9 @@ function getDashboardData(adminEmail, userEmails, date) {
   const targetDateStr = Utilities.formatDate(targetDate, timeZone, "MM/dd/yyyy");
   
   // --- UPDATED: Filter by selected users ---
-  let targetUserEmails;
-  // Check for 'ALL_USERS' signal which means nothing was selected in the custom dropdown
-  if (userEmails && userEmails.length === 1 && userEmails[0] === 'ALL_USERS') {
-    // Attempt to load the user's saved team first
-    targetUserEmails = getMyTeam(adminEmail);
-    // If no team is saved, default to ALL users in the database
-    if (targetUserEmails.length === 0) {
-      targetUserEmails = userData.userList.map(u => u.email);
-    }
-  } else {
-    // Use the specific list provided by the custom dropdown
-    targetUserEmails = userEmails;
-  }
+  let targetUserEmails = userEmails;
+
+  // Use the specific list provided by the custom dropdown
   const targetUserSet = new Set(targetUserEmails);
   // --- END UPDATED FILTER ---
   
