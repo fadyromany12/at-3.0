@@ -1227,6 +1227,28 @@
       body.dark-mode #coaching-overall-score {
         color: var(--konecta-yellow);
       }
+      
+      /* NEW: Coaching list header style */
+      .coaching-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: -20px; /* Pulls list up */
+      }
+      .coaching-list-header h2 {
+         margin: 0;
+      }
+      /* Style for export button */
+      .coaching-list-header .export-btn {
+        background-color: var(--text-color-secondary);
+        display: none; /* Hidden by default */
+        margin: 0; /* Reset button margin */
+        padding: 10px 20px; /* Smaller padding */
+        font-size: 14px;
+      }
+      .coaching-list-header .export-btn:hover {
+        background-color: #3c4043;
+      }
 
       /* --- Responsive Design --- */
       @media (max-width: 900px) {
@@ -1283,6 +1305,16 @@
         /* NEW: Responsive QA Form */
         .qa-criterion-inputs {
           flex-direction: column;
+        }
+        /* NEW: Responsive coaching header */
+        .coaching-list-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 15px;
+          margin-bottom: 0;
+        }
+        .coaching-list-header .export-btn {
+          width: 100%;
         }
       }
     </style>
@@ -1626,20 +1658,31 @@
               <textarea id="coaching-follow-up" rows="4"></textarea>
             </div>
             
+            <!-- *** NEW: Follow-up Date Input *** -->
+            <div class="form-group">
+              <label for="coaching-follow-up-date">Follow-up Date (Optional)</label>
+              <input type="date" id="coaching-follow-up-date">
+            </div>
+            <!-- ******************************* -->
+            
             <button type="button" class="submit-btn-green" onclick="submitNewCoaching()">Submit Coaching</button>
             <div id="coaching-submit-status" class="status-message"></div>
           </div>
 
           <!-- List Container -->
           <div id="coaching-list-container">
-            <h2>My Coaching History</h2> <!-- Title will be changed by JS -->
+            <!-- *** NEW: Header container for Title and Export Button *** -->
+            <div class="coaching-list-header">
+              <h2>My Coaching History</h2> <!-- Title will be changed by JS -->
+              <button type="button" class="export-btn" id="export-coaching-btn" onclick="exportCoachingHistory()">Export History</button>
+            </div>
+            <!-- ******************************************************* -->
+            
             <div id="coaching-list-status" class="status-message"></div>
             <div id="coaching-list" class="request-list">
               <p class="text-color-secondary">Your coaching history will appear here.</p>
             </div>
           </div>
-
-          <!-- REMOVED THE OLD/DUPLICATE COACHING FORM AND LIST -->
 
         </div>
 
@@ -2477,17 +2520,19 @@
         `;
 
         const today = new Date();
-        today.setHours(0,0,0,0);
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const todayStr = today.toLocaleDateString('en-US', { timeZone: timeZone });
+
 
         scheduleData.forEach(day => {
           const scheduleDate = new Date(day.date);
-          const dayStr = scheduleDate.toLocaleDateString('en-US', { weekday: 'long' });
+          const scheduleDateStr = scheduleDate.toLocaleDateString('en-US', { timeZone: timeZone });
+          
+          const dayStr = scheduleDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: timeZone });
           const dateStr = formatDate(day.date);
           
           let trClass = '';
-          if (scheduleDate.getTime() < today.getTime()) {
-            trClass = 'day-past';
-          } else if (scheduleDate.getTime() === today.getTime()) {
+          if (scheduleDateStr === todayStr) {
             trClass = 'day-today';
           }
 
@@ -3556,6 +3601,9 @@
         { text: "Missed It (0)", value: "0" }
       ];
 
+      // *** NEW: Store last coaching data for export ***
+      let lastCoachingData = [];
+
       /**
        * Calculates ISO week number.
        */
@@ -3646,6 +3694,9 @@
        */
       function loadMyCoaching() {
         setStatus('coaching-list-status', 'processing', 'Loading coaching history...');
+        // *** NEW: Hide export button while loading ***
+        document.getElementById('export-coaching-btn').style.display = 'none';
+        lastCoachingData = [];
         
         google.script.run
           .withSuccessHandler(populateMyCoaching)
@@ -3671,6 +3722,10 @@
           return;
         }
         
+        // *** NEW: Store data for export and show button ***
+        lastCoachingData = sessions;
+        document.getElementById('export-coaching-btn').style.display = 'inline-block';
+        
         let html = '';
         // Sort by session date, newest first
         sessions.sort((a, b) => new Date(b.sessionDate) - new Date(a.sessionDate));
@@ -3680,16 +3735,29 @@
           if (session.overallScore) {
              scoreDisplay = `${parseFloat(session.overallScore).toFixed(2)}%`;
           }
+          
+          // *** NEW: Format follow-up date and status ***
+          let fuDate = session.followUpDate ? formatDate(session.followUpDate) : 'N/A';
+          let fuStatus = session.followUpStatus || '';
+          let fuHtml = '';
+          if (fuStatus === 'Pending') {
+            fuHtml = `<p><strong>Follow-up:</strong> <span class="status-badge status-pending" style="margin-top:0;">${fuDate}</span></p>`;
+          } else if (fuStatus) { // e.g., "Completed"
+            fuHtml = `<p><strong>Follow-up:</strong> ${fuDate} (${fuStatus})</p>`;
+          }
+          // ********************************************
 
           html += `
             <div class="request-list-item">
               <div class="item-details">
                 <h4>${session.agentName} - ${formatDate(session.sessionDate)} (${session.weekNumber})</h4>
                 <p><strong>Coach:</strong> ${session.coachName}</p>
-                <p><strong>Overall Score:</strong> <strong style="color:var(--konecta-dark)">${scoreDisplay}</strong></p>
-                ${session.followUpComment ? `<p><strong>Follow-up:</strong> ${session.followUpComment}</p>` : ''}
+                <p><strong>Overall Score:</strong> <strong style="color:var(--konecta-dark);">${scoreDisplay}</strong></p>
+                ${session.followUpComment ? `<p><strong>Comments:</strong> ${session.followUpComment}</p>` : ''}
+                ${fuHtml} <!-- *** NEW: Added follow-up HTML *** -->
               </div>
               <div class="item-actions">
+                 <!-- TODO: Add function to view details -->
                  <button type="button" class="deny-btn" style="background-color: var(--text-color-secondary); opacity: 0.6; cursor: not-allowed;" disabled title="Details coming soon">View Details</button>
               </div>
             </div>
@@ -3698,6 +3766,45 @@
         
         listDiv.innerHTML = html;
         setStatus('coaching-list-status', '', ''); // Clear loading message
+      }
+      
+      /**
+       * *** NEW: Export Coaching History (Summary) ***
+       */
+      function exportCoachingHistory() {
+        if (!lastCoachingData || lastCoachingData.length === 0) {
+          setStatus('coaching-list-status', 'error', "No data to export.");
+          return;
+        }
+        
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "SessionID,AgentName,CoachName,SessionDate,WeekNumber,OverallScore,FollowUpComment,FollowUpDate,FollowUpStatus\r\n";
+        
+        lastCoachingData.forEach(session => {
+          // Escape commas and quotes in comments
+          const comment = `"${(session.followUpComment || "").replace(/"/g, '""')}"`;
+          
+          let row = [
+            session.sessionID,
+            session.agentName,
+            session.coachName,
+            formatDate(session.sessionDate),
+            session.weekNumber,
+            session.overallScore || 'N/A',
+            comment,
+            session.followUpDate ? formatDate(session.followUpDate) : 'N/A',
+            session.followUpStatus || 'N/A'
+          ].join(",");
+          csvContent += row + "\r\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Coaching_History_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link); 
+        link.click();
+        document.body.removeChild(link);
       }
 
       /**
@@ -3716,6 +3823,8 @@
           
           const weekNumber = document.getElementById('coaching-week-number').value;
           const followUpComment = document.getElementById('coaching-follow-up').value;
+          // *** NEW: Get follow-up date ***
+          const followUpDate = document.getElementById('coaching-follow-up-date').value;
 
           // Gather scores
           const scores = [];
@@ -3745,7 +3854,9 @@
             weekNumber: weekNumber,
             scores: scores,
             followUpComment: followUpComment,
-            overallScore: percentage
+            overallScore: percentage,
+            // *** NEW: Add follow-up date to object ***
+            followUpDate: followUpDate || null 
           };
           
           setStatus('coaching-submit-status', 'processing', `Saving session for ${agentSelect.options[agentSelect.selectedIndex].text}...`);
@@ -3757,8 +3868,17 @@
               } else {
                 setStatus('coaching-submit-status', 'success', msg);
                 // Reset form
-                document.getElementById('coaching-form-container').reset();
-                document.getElementById('coaching-agent-select').selectedIndex = 0;
+                // Use .reset() on the parent form element, if it exists
+                const form = document.getElementById('coaching-form-container');
+                if (form && typeof form.reset === 'function') {
+                    form.reset();
+                } else {
+                    // Manual reset as fallback
+                    document.getElementById('coaching-agent-select').selectedIndex = 0;
+                    document.getElementById('coaching-follow-up').value = '';
+                    document.getElementById('coaching-follow-up-date').value = '';
+                }
+                
                 document.getElementById('coaching-session-date').valueAsDate = new Date();
                 updateWeekNumber();
                 buildQualityForm(); // Re-builds the form, clearing it
