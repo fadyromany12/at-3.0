@@ -282,7 +282,7 @@
 
       /* --- Centered Card Layout --- */
       main {
-        max-width: 1100px;
+        max-width: 1600px; /* MODIFIED: Increased max-width for wider interface */
         /* MODIFIED: Set bottom margin to 0 for sticky footer */
         margin: 30px auto 0 auto; 
         background-color: var(--card-bg);
@@ -1227,16 +1227,14 @@
           
           <!-- MODIFIED: The grid is now responsive with 2 columns on desktop -->
           <div id="dashboard-grid">
-            <div class="dashboard-card">
+            <!-- MODIFIED: Added full-width class and removed the second card to make Agent Status fill the top row -->
+            <div class="dashboard-card full-width">
               <!-- MODIFIED: Changed the title to reflect the new list display -->
               <h3>Agent Status (Real-Time)</h3>
               <!-- MODIFIED: This now holds the list of agents and their statuses -->
               <div id="status-agent-list" class="chart-container"></div>
             </div>
-            <div class="dashboard-card">
-              <h3>Total Adherence Deviations</h3>
-              <div id="adherence-bar-chart" class="chart-container"></div>
-            </div>
+            <!-- Removed 'Total Adherence Deviations' card -->
             <div class="dashboard-card full-width">
               <h3>Adherence Details (Today)</h3>
               <!-- MODIFIED: Changed the container to display list-style cards -->
@@ -2452,7 +2450,7 @@
         if (!data || data.error) {
           setStatus('dashboard-status', 'error', data.error || 'Failed to load dashboard data.');
           document.getElementById('status-agent-list').innerHTML = ''; // Modified ID
-          document.getElementById('adherence-bar-chart').innerHTML = '';
+          // document.getElementById('adherence-bar-chart').innerHTML = ''; // Removed element
           document.getElementById('pending-leave-table').innerHTML = '';
           document.getElementById('adherence-detail-table').innerHTML = '';
           return;
@@ -2540,34 +2538,7 @@
 
 
         // 2. Draw Adherence Bar Chart
-        const adherenceData = new google.visualization.DataTable();
-        adherenceData.addColumn('string', 'Metric');
-        adherenceData.addColumn('number', 'Minutes');
-        adherenceData.addRows([
-          ['Tardy', data.totalAdherenceMetrics.totalTardy / 60],
-          ['Early Leave', data.totalAdherenceMetrics.totalEarlyLeave / 60],
-          ['Break Exceed', data.totalAdherenceMetrics.totalBreakExceed / 60],
-          ['Lunch Exceed', data.totalAdherenceMetrics.totalLunchExceed / 60]
-        ]);
-        const barOptions = {
-          title: 'Total Adherence Deviations (in Minutes)',
-          legend: { position: 'none' },
-          backgroundColor: 'transparent',
-          titleTextStyle: { color: titleColor },
-          textStyle: { color: textColor },
-          vAxis: { 
-            title: 'Minutes', 
-            titleTextStyle: { color: legendColor },
-            textStyle: { color: legendColor },
-            gridlines: { color: chartGridColor }
-          },
-          hAxis: {
-            textStyle: { color: legendColor }
-          },
-          chartArea: { left: '20%', top: '10%', width: '75%', height: '75%' }
-        };
-        const barChart = new google.visualization.BarChart(document.getElementById('adherence-bar-chart'));
-        barChart.draw(adherenceData, barOptions);
+        // REMOVED LOGIC: Bar chart is removed as per user request.
         
         // 3. Draw Adherence Detail List (Custom HTML/CSS)
         const adherenceDetailDiv = document.getElementById('adherence-detail-table');
