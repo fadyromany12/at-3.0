@@ -328,6 +328,7 @@ function webGetCoachingHistory(filter) { // filter is unused for now, but good p
  * NEW: Fetches the details for a single coaching session.
  * (MODIFIED: Renamed to webGetCoachingSessionDetails to be callable)
  * (MODIFIED 2: Added date-to-string conversion to fix null return)
+ * (MODIFIED 3: Added AgentAcknowledgementTimestamp conversion)
  */
 function webGetCoachingSessionDetails(sessionID) {
   try {
@@ -374,10 +375,12 @@ function webGetCoachingSessionDetails(sessionID) {
     
     sessionSummary.CoachName = userData.emailToName[sessionSummary.CoachEmail] || sessionSummary.CoachName;
     
-    // *** NEW: Convert Date objects to Strings before returning ***
+    // *** Convert Date objects to Strings before returning ***
     sessionSummary.SessionDate = convertDateToString(new Date(sessionSummary.SessionDate));
     sessionSummary.SubmissionTimestamp = convertDateToString(new Date(sessionSummary.SubmissionTimestamp));
     sessionSummary.FollowUpDate = convertDateToString(new Date(sessionSummary.FollowUpDate));
+    // *** NEW: Convert the new column ***
+    sessionSummary.AgentAcknowledgementTimestamp = convertDateToString(new Date(sessionSummary.AgentAcknowledgementTimestamp));
     // *** END NEW SECTION ***
 
     return {
@@ -452,6 +455,67 @@ function webUpdateFollowUpStatus(sessionID, newStatus, newDateStr) {
 
   } catch (err) {
     Logger.log("webUpdateFollowUpStatus Error: " + err.message);
+    return { error: err.message };
+  }
+}
+
+/**
+ * NEW: Allows an agent to acknowledge their coaching session.
+ */
+function webSubmitCoachingAcknowledgement(sessionID) {
+  try {
+    const userEmail = Session.getActiveUser().getEmail().toLowerCase();
+    const ss = getSpreadsheet();
+    
+    const sessionSheet = getOrCreateSheet(ss, SHEET_NAMES.coachingSessions);
+    const sessionData = sessionSheet.getDataRange().getValues();
+    const sessionHeaders = sessionData[0];
+    
+    // Find the column indexes
+    const ackColIndex = sessionHeaders.indexOf("AgentAcknowledgementTimestamp");
+    const agentEmailColIndex = sessionHeaders.indexOf("AgentEmail");
+    
+    if (ackColIndex === -1 || agentEmailColIndex === -1) {
+      throw new Error("Could not find 'AgentAcknowledgementTimestamp' or 'AgentEmail' columns in CoachingSessions sheet.");
+    }
+
+    // Find the row
+    let sessionRow = -1;
+    let agentEmailOnRow = null;
+    let currentAckStatus = null;
+
+    for (let i = 1; i < sessionData.length; i++) {
+      if (sessionData[i][0] === sessionID) {
+        sessionRow = i + 1; // 1-based index
+        agentEmailOnRow = sessionData[i][agentEmailColIndex].toLowerCase();
+        currentAckStatus = sessionData[i][ackColIndex];
+        break;
+      }
+    }
+
+    if (sessionRow === -1) {
+      throw new Error("Session not found.");
+    }
+    
+    // Security Check: Is this the correct agent?
+    if (agentEmailOnRow !== userEmail) {
+      throw new Error("Permission denied. You can only acknowledge your own coaching sessions.");
+    }
+    
+    // Check if already acknowledged
+    if (currentAckStatus) {
+      return { success: false, message: "This session has already been acknowledged." };
+    }
+    
+    // Update the sheet
+    sessionSheet.getRange(sessionRow, ackColIndex + 1).setValue(new Date());
+
+    SpreadsheetApp.flush(); // Ensure changes are saved
+
+    return { success: true, message: "Coaching session acknowledged successfully." };
+
+  } catch (err) {
+    Logger.log("webSubmitCoachingAcknowledgement Error: " + err.message);
     return { error: err.message };
   }
 }
@@ -1140,71 +1204,74 @@ function findOrCreateRow(sheet, userName, shiftDate, formattedDate) { 
 
 // *** UPDATED getOrCreateSheet ***
 function getOrCreateSheet(ss, name) {
-  let sheet = ss.getSheetByName(name);
-  if (!sheet) {
-    sheet = ss.insertSheet(name);
-    if (name === SHEET_NAMES.database) {
-      // NEW: Added SupervisorEmail
-      sheet.getRange("A1:G1").setValues([["User Name", "Email", "Role", "Annual Balance", "Sick Balance", "Casual Balance", "SupervisorEmail"]]); 
-    } else if (name === SHEET_NAMES.schedule) {
-      sheet.getRange("A1:F1").setValues([["Name", "Date", "Shift Start Time", "Shift End Time", "Leave Type", "agent email"]]); 
-      sheet.getRange("C:D").setNumberFormat("hh:mm");
-    } else if (name === SHEET_NAMES.adherence) {
-      sheet.getRange("A1:U1").setValues([[ 
-        "Date", "User Name", "Login", "First Break In", "First Break Out", "Lunch In", "Lunch Out", 
-        "Last Break In", "Last Break Out", "Logout", "Tardy (Seconds)", "Overtime (Seconds)", "Early Leave (Seconds)",
-        "Leave Type", "Admin Audit", "—", "1st Break Exceed", "Lunch Exceed", "Last Break Exceed", "Absent", "Admin Code"
-      ]]);
-    } else if (name === SHEET_NAMES.logs) {
-      sheet.getRange("A1:E1").setValues([["Timestamp", "User Name", "Email", "Action", "Time"]]); 
-    } else if (name === SHEET_NAMES.otherCodes) { 
-      sheet.getRange("A1:G1").setValues([["Date", "User Name", "Code", "Time In", "Time Out", "Duration (Seconds)", "Admin Audit (Email)"]]); 
-    } else if (name === SHEET_NAMES.leaveRequests) { 
-      sheet.getRange("A1:L1").setValues([
-        ["RequestID", "Status", "RequestedByEmail", "RequestedByName", 
-         "LeaveType", "StartDate", "EndDate", "TotalDays", "Reason", 
-         "ActionDate", "ActionBy", "SupervisorEmail"] 
-      ]);
-      sheet.getRange("F:G").setNumberFormat("mm/dd/yyyy");
-          // ... inside getOrCreateSheet function
-      sheet.getRange("J:J").setNumberFormat("mm/dd/yyyy");
-    } else if (name === SHEET_NAMES.coaching_OLD) { // <-- Renamed this
-      sheet.getRange("A1:R1").setValues([[
-        "SessionID", "Status", "AgentEmail", "AgentName", "CoachEmail", "CoachName",
-        "WeekNumber", "SessionDate", "AreaOfConcern", "RootCause", "CoachingTopic",
-        "ActionsTaken", "AgentFeedback", "FollowUpPlan", "NextReviewDate",
-        "QA_ID", "QA_Score", "LoggedByAdmin"
-      ]]);
-      sheet.getRange("H:H").setNumberFormat("mm/dd/yyyy");
-      sheet.getRange("O:O").setNumberFormat("mm/dd/yyyy");
-    } 
-    // +++ ADDED NEW SHEET DEFINITIONS +++
-    else if (name === SHEET_NAMES.coachingSessions) { 
-      sheet.getRange("A1:L1").setValues([[ // *** CHANGED from J1 to L1 ***
-        "SessionID", "AgentEmail", "AgentName", "CoachEmail", "CoachName",
-        "SessionDate", "WeekNumber", "OverallScore", "FollowUpComment", "SubmissionTimestamp",
-        "FollowUpDate", "FollowUpStatus" // *** ADDED NEW COLUMNS ***
-      ]]);
-      sheet.getRange("F:F").setNumberFormat("mm/dd/yyyy");
-      sheet.getRange("J:J").setNumberFormat("mm/dd/yyyy hh:mm:ss");
-      sheet.getRange("K:K").setNumberFormat("mm/dd/yyyy"); // *** ADDED FORMAT for K ***
-    } else if (name === SHEET_NAMES.coachingScores) { 
-      sheet.getRange("A1:E1").setValues([[
-        "SessionID", "Category", "Criteria", "Score", "Comment"
-      ]]);
-    }
-    // +++ END OF NEW SHEET DEFINITIONS +++
-  }
-  if (name === SHEET_NAMES.adherence) {
-    sheet.getRange("C:J").setNumberFormat("hh:mm:ss");
-  }
-  if (name === SHEET_NAMES.otherCodes) {
-    sheet.getRange("D:E").setNumberFormat("hh:mm:ss");
-  }
-  if (name === SHEET_NAMES.schedule) {
-    sheet.getRange("C:D").setNumberFormat("hh:mm");
-  }
-  return sheet;
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    if (name === SHEET_NAMES.database) {
+      // NEW: Added SupervisorEmail
+      sheet.getRange("A1:G1").setValues([["User Name", "Email", "Role", "Annual Balance", "Sick Balance", "Casual Balance", "SupervisorEmail"]]);
+    } else if (name === SHEET_NAMES.schedule) {
+      sheet.getRange("A1:F1").setValues([["Name", "Date", "Shift Start Time", "Shift End Time", "Leave Type", "agent email"]]);
+      sheet.getRange("C:D").setNumberFormat("hh:mm");
+    } else if (name === SHEET_NAMES.adherence) {
+      sheet.getRange("A1:U1").setValues([[ 
+        "Date", "User Name", "Login", "First Break In", "First Break Out", "Lunch In", "Lunch Out", 
+        "Last Break In", "Last Break Out", "Logout", "Tardy (Seconds)", "Overtime (Seconds)", "Early Leave (Seconds)",
+        "Leave Type", "Admin Audit", "—", "1st Break Exceed", "Lunch Exceed", "Last Break Exceed", "Absent", "Admin Code"
+      ]]);
+    } else if (name === SHEET_NAMES.logs) {
+      sheet.getRange("A1:E1").setValues([["Timestamp", "User Name", "Email", "Action", "Time"]]);
+    } else if (name === SHEET_NAMES.otherCodes) { 
+      sheet.getRange("A1:G1").setValues([["Date", "User Name", "Code", "Time In", "Time Out", "Duration (Seconds)", "Admin Audit (Email)"]]);
+    } else if (name === SHEET_NAMES.leaveRequests) { 
+      sheet.getRange("A1:L1").setValues([
+        ["RequestID", "Status", "RequestedByEmail", "RequestedByName", 
+         "LeaveType", "StartDate", "EndDate", "TotalDays", "Reason", 
+         "ActionDate", "ActionBy", "SupervisorEmail"] 
+      ]);
+      sheet.getRange("F:G").setNumberFormat("mm/dd/yyyy");
+          // ... inside getOrCreateSheet function
+      sheet.getRange("J:J").setNumberFormat("mm/dd/yyyy");
+    } else if (name === SHEET_NAMES.coaching_OLD) { // <-- Renamed this
+      sheet.getRange("A1:R1").setValues([[
+        "SessionID", "Status", "AgentEmail", "AgentName", "CoachEmail", "CoachName",
+        "WeekNumber", "SessionDate", "AreaOfConcern", "RootCause", "CoachingTopic",
+        "ActionsTaken", "AgentFeedback", "FollowUpPlan", "NextReviewDate",
+        "QA_ID", "QA_Score", "LoggedByAdmin"
+      ]]);
+      sheet.getRange("H:H").setNumberFormat("mm/dd/yyyy");
+      sheet.getRange("O:O").setNumberFormat("mm/dd/yyyy");
+    } 
+    // +++ ADDED NEW SHEET DEFINITIONS +++
+    else if (name === SHEET_NAMES.coachingSessions) { 
+      // *** MODIFIED from L1 to M1 ***
+      sheet.getRange("A1:M1").setValues([[ 
+        "SessionID", "AgentEmail", "AgentName", "CoachEmail", "CoachName",
+        "SessionDate", "WeekNumber", "OverallScore", "FollowUpComment", "SubmissionTimestamp",
+        "FollowUpDate", "FollowUpStatus", "AgentAcknowledgementTimestamp" // *** ADDED NEW COLUMN ***
+      ]]);
+      sheet.getRange("F:F").setNumberFormat("mm/dd/yyyy");
+      sheet.getRange("J:J").setNumberFormat("mm/dd/yyyy hh:mm:ss");
+      sheet.getRange("K:K").setNumberFormat("mm/dd/yyyy");
+      // *** NEW: Format for M column ***
+      sheet.getRange("M:M").setNumberFormat("mm/dd/yyyy hh:mm:ss");
+    } else if (name === SHEET_NAMES.coachingScores) { 
+      sheet.getRange("A1:E1").setValues([[
+        "SessionID", "Category", "Criteria", "Score", "Comment"
+      ]]);
+    }
+    // +++ END OF NEW SHEET DEFINITIONS +++
+  }
+  if (name === SHEET_NAMES.adherence) {
+    sheet.getRange("C:J").setNumberFormat("hh:mm:ss");
+  }
+  if (name === SHEET_NAMES.otherCodes) {
+    sheet.getRange("D:E").setNumberFormat("hh:mm:ss");
+  }
+  if (name === SHEET_NAMES.schedule) {
+    sheet.getRange("C:D").setNumberFormat("hh:mm");
+  }
+  return sheet;
 }
 
 // (No Change)
