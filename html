@@ -3729,21 +3729,24 @@
         let html = '';
         // Sort by session date, newest first
         sessions.sort((a, b) => new Date(b.sessionDate) - new Date(a.sessionDate));
-
+        
         sessions.forEach(session => {
           let scoreDisplay = 'N/A';
           if (session.overallScore) {
              scoreDisplay = `${parseFloat(session.overallScore).toFixed(2)}%`;
           }
           
-          // *** NEW: Format follow-up date and status ***
           let fuDate = session.followUpDate ? formatDate(session.followUpDate) : 'N/A';
           let fuStatus = session.followUpStatus || '';
           let fuHtml = '';
+
+          // *** NEW: Better Follow-up Status Display ***
           if (fuStatus === 'Pending') {
-            fuHtml = `<p><strong>Follow-up:</strong> <span class="status-badge status-pending" style="margin-top:0;">${fuDate}</span></p>`;
-          } else if (fuStatus) { // e.g., "Completed"
-            fuHtml = `<p><strong>Follow-up:</strong> ${fuDate} (${fuStatus})</p>`;
+            fuHtml = `<p><strong>Follow-up:</strong> <span class="status-badge status-pending" style="margin-top:0;">Pending (${fuDate})</span></p>`;
+          } else if (fuStatus === 'Completed') {
+            fuHtml = `<p><strong>Follow-up:</strong> <span class="status-badge status-approved" style="margin-top:0;">Completed (${fuDate})</span></p>`;
+          } else if (fuStatus) { // e.g., "Postponed"
+            fuHtml = `<p><strong>Follow-up:</strong> <span class="status-badge status-processing" style="margin-top:0;">${fuStatus} (${fuDate})</span></p>`;
           }
           // ********************************************
 
@@ -3753,12 +3756,12 @@
                 <h4>${session.agentName} - ${formatDate(session.sessionDate)} (${session.weekNumber})</h4>
                 <p><strong>Coach:</strong> ${session.coachName}</p>
                 <p><strong>Overall Score:</strong> <strong style="color:var(--konecta-dark);">${scoreDisplay}</strong></p>
-                ${session.followUpComment ? `<p><strong>Comments:</strong> ${session.followUpComment}</p>` : ''}
-                ${fuHtml} <!-- *** NEW: Added follow-up HTML *** -->
-              </div>
+                ${session.followUpComment ?
+                  `<p><strong>Comments:</strong> ${session.followUpComment}</p>` : ''}
+                ${fuHtml} </div>
               <div class="item-actions">
-                 <!-- TODO: Add function to view details -->
-                 <button type="button" class="deny-btn" style="background-color: var(--text-color-secondary); opacity: 0.6; cursor: not-allowed;" disabled title="Details coming soon">View Details</button>
+                 <button type="button" class="view-btn" style="background-color: var(--konecta-blue); min-width: 120px;" 
+                         onclick="showCoachingDetails('${session.sessionID}')">View Details</button>
               </div>
             </div>
           `;
@@ -3896,6 +3899,229 @@
         }
       }
       
+
+      // --- NEW: Coaching Detail Modal Functions ---
+
+      let currentCoachingDetail = null; // Stores details for export
+
+      function showCoachingDetails(sessionID) {
+        // 1. Show the modal
+        document.getElementById('coaching-detail-modal-backdrop').style.display = 'block';
+        document.getElementById('coaching-detail-modal').style.display = 'flex';
+        
+        // 2. Reset modal state
+        const modalBody = document.getElementById('coaching-detail-modal-body');
+        modalBody.innerHTML = '<p class="text-color-secondary">Loading details...</p>';
+        document.getElementById('coaching-detail-export-btn').style.display = 'none';
+        currentCoachingDetail = null;
+
+        // 3. Fetch data
+        google.script.run
+          .withSuccessHandler(populateCoachingDetails)
+          .withFailureHandler(err => {
+            modalBody.innerHTML = `<p class="status-message error visible">Error: ${err.message}</p>`;
+          })
+          .getCoachingSessionDetails(sessionID);
+      }
+
+      function closeCoachingDetails() {
+        document.getElementById('coaching-detail-modal-backdrop').style.display = 'none';
+        document.getElementById('coaching-detail-modal').style.display = 'none';
+        document.getElementById('coaching-detail-modal-body').innerHTML = '';
+        currentCoachingDetail = null;
+      }
+
+      function populateCoachingDetails(details) {
+        if (details.error) {
+          document.getElementById('coaching-detail-modal-body').innerHTML = `<p class="status-message error visible">Error: ${details.error}</p>`;
+          return;
+        }
+
+        currentCoachingDetail = details; // Save for export
+        const summary = details.summary;
+        const scores = details.scores;
+
+        let scoreDisplay = summary.OverallScore ? `${parseFloat(summary.OverallScore).toFixed(2)}%` : 'N/A';
+        let fuDate = summary.FollowUpDate ? formatDate(summary.FollowUpDate) : 'N/A';
+
+        // *** NEW: Admin Follow-up Management Section ***
+        let adminSection = '';
+        if (selfRole === 'admin' || selfRole === 'superadmin') {
+          adminSection = `
+            <hr class="section-divider">
+            <h3 style="color: var(--konecta-blue); margin-top: 0;">Manage Follow-up</h3>
+            <div class="form-container" style="padding: 0;">
+              <div id="follow-up-status" class="status-message" style="margin-top: 0; margin-bottom: 15px;"></div>
+              <div class_id="follow-up-controls" class="form-row" style="align-items: flex-end;">
+                <div class="form-group">
+                  <label for="follow-up-postpone-date">Postpone Date</label>
+                  <input type="date" id="follow-up-postpone-date">
+                </div>
+                <div class="form-group">
+                  <button type="button" class="view-btn" style="background-color: var(--status-pending-text); width: 100%; margin: 0;"
+                          onclick="updateFollowUpStatus('${summary.SessionID}', 'Postponed')">Postpone</button>
+                </div>
+                <div class="form-group">
+                  <button type="button" class="submit-btn-green" style="width: 100%; margin: 0;"
+                          onclick="updateFollowUpStatus('${summary.SessionID}', 'Completed')">Mark Completed</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        // *** END NEW SECTION ***
+
+
+        let html = `
+          <div class="dashboard-detail-item" style="background: var(--page-bg); grid-template-columns: 1fr 2fr; gap: 8px 15px;">
+            <span class="detail-label">Agent:</span>
+            <span class="detail-value" style="text-align: left;">${summary.AgentName}</span>
+            
+            <span class="detail-label">Coach:</span>
+            <span class="detail-value" style="text-align: left;">${summary.CoachName}</span>
+            
+            <span class="detail-label">Session Date:</span>
+            <span class="detail-value" style="text-align: left;">${formatDate(summary.SessionDate)} (${summary.WeekNumber})</span>
+            
+            <span class="detail-label">Overall Score:</span>
+            <span class="detail-value" style="text-align: left; font-size: 1.1rem; color: var(--konecta-dark);">${scoreDisplay}</span>
+            
+            <span class="detail-label">Follow-up Date:</span>
+            <span class="detail-value" style="text-align: left;">${fuDate}</span>
+            
+            <span class="detail-label">Follow-up Status:</span>
+            <span class="detail-value" style="text-align: left;">${summary.FollowUpStatus || 'N/A'}</span>
+            
+            <span class="detail-label" style="grid-column: 1 / -1; margin-top: 10px;"><strong>Coach Comments:</strong></span>
+            <p style="grid-column: 1 / -1; margin: 0; white-space: pre-wrap;">${summary.FollowUpComment || 'No comments provided.'}</p>
+          </div>
+          
+          ${adminSection}
+          
+          <hr class="section-divider">
+          
+          <h3 style="color: var(--konecta-blue); margin-top: 0;">Detailed Scores</h3>
+        `;
+
+        // Group scores by category
+        const categories = {};
+        scores.forEach(score => {
+          if (!categories[score.Category]) {
+            categories[score.Category] = [];
+          }
+          categories[score.Category].push(score);
+        });
+
+        // Build HTML for each category
+        for (const categoryName in categories) {
+          html += `
+            <div class="qa-category" style="margin-top: 15px;">
+              <h4>${categoryName}</h4>
+              ${categories[categoryName].map(item => `
+                <div class="qa-criterion">
+                  <p style="margin: 0 0 10px 0;">${item.Criteria}</p>
+                  <div style="display: flex; gap: 15px; align-items: flex-start;">
+                    <span class="status-badge status-approved" style="background-color: var(--konecta-dark); color: white; padding: 8px 15px; min-width: 80px; text-align: center;">Score: ${item.Score}</span>
+                    <textarea readonly style="flex: 1; height: 60px; min-height: 40px; background: var(--card-bg);">${item.Comment || 'N/A'}</textarea>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        document.getElementById('coaching-detail-modal-body').innerHTML = html;
+        document.getElementById('coaching-detail-export-btn').style.display = 'inline-block';
+        
+        // Set postpone date input to today
+        if (selfRole === 'admin' || selfRole === 'superadmin') {
+          document.getElementById('follow-up-postpone-date').valueAsDate = new Date();
+        }
+      }
+      
+      /**
+       * NEW: Export Individual Coaching Session Details
+       */
+      function exportSessionDetails() {
+        if (!currentCoachingDetail) {
+          alert("No coaching details are loaded to export.");
+          return;
+        }
+
+        const summary = currentCoachingDetail.summary;
+        const scores = currentCoachingDetail.scores;
+
+        let csvContent = "data:text/csv;charset=utf-8,";
+        
+        // Add Summary
+        csvContent += "Session Summary\r\n";
+        csvContent += `SessionID,"${summary.SessionID}"\r\n`;
+        csvContent += `Agent,"${summary.AgentName}"\r\n`;
+        csvContent += `Coach,"${summary.CoachName}"\r\n`;
+        csvContent += `Date,"${formatDate(summary.SessionDate)}"\r\n`;
+        csvContent += `Week,"${summary.WeekNumber}"\r\n`;
+        csvContent += `Overall Score,"${summary.OverallScore || 'N/A'}"\r\n`;
+        csvContent += `Follow-up Date,"${summary.FollowUpDate ? formatDate(summary.FollowUpDate) : 'N/A'}"\r\n`;
+        csvContent += `Follow-up Status,"${summary.FollowUpStatus || 'N/A'}"\r\n`;
+        csvContent += `Comments,"${(summary.FollowUpComment || '').replace(/"/g, '""')}"\r\n`;
+        
+        // Add Spacer
+        csvContent += "\r\nDetailed Scores\r\n";
+        
+        // Add Detail Headers
+        csvContent += "Category,Criteria,Score,Comment\r\n";
+
+        // Add Detail Rows
+        scores.forEach(item => {
+          const category = `"${item.Category.replace(/"/g, '""')}"`;
+          const criteria = `"${item.Criteria.replace(/"/g, '""')}"`;
+          const score = item.Score;
+          const comment = `"${(item.Comment || '').replace(/"/g, '""')}"`;
+          csvContent += [category, criteria, score, comment].join(",") + "\r\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Coaching_Detail_${summary.AgentName}_${formatDate(summary.SessionDate)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      
+      function updateFollowUpStatus(sessionID, newStatus) {
+        let newDate = null;
+        
+        if (newStatus === 'Postponed') {
+          newDate = document.getElementById('follow-up-postpone-date').value;
+          if (!newDate) {
+            setStatus('follow-up-status', 'error', 'Please select a date to postpone to.');
+            return;
+          }
+        }
+        
+        // Show processing status inside the modal
+        setStatus('follow-up-status', 'processing', 'Updating status...');
+
+        google.script.run
+          .withSuccessHandler(result => {
+            if (result.error) {
+              setStatus('follow-up-status', 'error', result.error);
+            } else {
+              setStatus('follow-up-status', 'success', result.message);
+              // Refresh the main list
+              loadMyCoaching();
+              // Re-fetch details for the modal to show updated info
+              showCoachingDetails(sessionID);
+            }
+          })
+          .withFailureHandler(err => {
+            setStatus('follow-up-status', 'error', err.message);
+          })
+          .webUpdateFollowUpStatus(sessionID, newStatus, newDate);
+      }
+
+
       // --- END Coaching Functions ---
 
 
@@ -3920,5 +4146,22 @@
         toggleTimeFields();
       });
     </script>
+    <div id="coaching-detail-modal-backdrop" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 199;"></div>
+    <div id="coaching-detail-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 800px; max-height: 90vh; background-color: var(--card-bg); border-radius: var(--radius); z-index: 200; box-shadow: var(--shadow); overflow: hidden; flex-direction: column;">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color);">
+        <h2 style="margin: 0; font-size: 1.25rem; color: var(--konecta-blue);">Coaching Session Details</h2>
+        <button onclick="closeCoachingDetails()" style="background: none; border: none; font-size: 2rem; cursor: pointer; color: var(--text-color-secondary); padding: 0 10px; line-height: 1;">&times;</button>
+      </div>
+      
+      <div id="coaching-detail-modal-body" style="padding: 20px; overflow-y: auto; flex-grow: 1;">
+        <p class="text-color-secondary">Loading details...</p>
+      </div>
+
+      <div style="padding: 15px 20px; border-top: 1px solid var(--border-color); background-color: var(--input-bg); text-align: right;">
+        <button id="coaching-detail-export-btn" type="button" class="export-btn" style="display: none; margin: 0 10px; background-color: var(--text-color-secondary);" onclick="exportSessionDetails()">Export Details</button>
+        <button type="button" onclick="closeCoachingDetails()" style="min-width: 100px; background-color: var(--konecta-dark);">Close</button>
+      </div>
+    </div>
   </body>
 </html>
