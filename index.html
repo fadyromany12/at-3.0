@@ -3905,6 +3905,14 @@
       let currentCoachingDetail = null; // Stores details for export
 
       function showCoachingDetails(sessionID) {
+        // --- NEW: Debugging ---
+        console.log("Attempting to load details for SessionID:", sessionID);
+        if (!sessionID) {
+          console.error("SessionID is undefined! Aborting.");
+          return;
+        }
+        // --- End Debugging ---
+
         // 1. Show the modal
         document.getElementById('coaching-detail-modal-backdrop').style.display = 'block';
         document.getElementById('coaching-detail-modal').style.display = 'flex';
@@ -3919,9 +3927,12 @@
         google.script.run
           .withSuccessHandler(populateCoachingDetails)
           .withFailureHandler(err => {
-            modalBody.innerHTML = `<p class="status-message error visible">Error: ${err.message}</p>`;
+            // --- NEW: Better Error Logging ---
+            console.error("google.script.run FAILED:", err);
+            modalBody.innerHTML = `<p class="status-message error visible">Error: ${err.message || 'The server call failed. Check the console (F12) for details.'}</p>`;
+            // --- End Better Logging ---
           })
-          .webGetCoachingSessionDetails(sessionID); // <-- *** THIS LINE IS NOW FIXED ***
+          .webGetCoachingSessionDetails(sessionID);
       }
 
       function closeCoachingDetails() {
@@ -3932,6 +3943,13 @@
       }
 
       function populateCoachingDetails(details) {
+        // *** NEW: Add robust check for null/undefined ***
+        if (!details) {
+          document.getElementById('coaching-detail-modal-body').innerHTML = `<p class="status-message error visible">Error: Received no details from the server. The data might be corrupted or the server function failed silently.</p>`;
+          return;
+        }
+        // *** END NEW SECTION ***
+
         if (details.error) {
           document.getElementById('coaching-detail-modal-body').innerHTML = `<p class="status-message error visible">Error: ${details.error}</p>`;
           return;
@@ -3944,7 +3962,7 @@
         let scoreDisplay = summary.OverallScore ? `${parseFloat(summary.OverallScore).toFixed(2)}%` : 'N/A';
         let fuDate = summary.FollowUpDate ? formatDate(summary.FollowUpDate) : 'N/A';
 
-        // *** NEW: Admin Follow-up Management Section ***
+        // *** Admin Follow-up Management Section ***
         let adminSection = '';
         if (selfRole === 'admin' || selfRole === 'superadmin') {
           adminSection = `
@@ -3952,7 +3970,7 @@
             <h3 style="color: var(--konecta-blue); margin-top: 0;">Manage Follow-up</h3>
             <div class="form-container" style="padding: 0;">
               <div id="follow-up-status" class="status-message" style="margin-top: 0; margin-bottom: 15px;"></div>
-              <div class_id="follow-up-controls" class="form-row" style="align-items: flex-end;">
+              <div id="follow-up-controls" class="form-row" style="align-items: flex-end;">
                 <div class="form-group">
                   <label for="follow-up-postpone-date">Postpone Date</label>
                   <input type="date" id="follow-up-postpone-date">
@@ -3969,7 +3987,7 @@
             </div>
           `;
         }
-        // *** END NEW SECTION ***
+        // *** END SECTION ***
 
 
         let html = `
@@ -4035,7 +4053,11 @@
         
         // Set postpone date input to today
         if (selfRole === 'admin' || selfRole === 'superadmin') {
-          document.getElementById('follow-up-postpone-date').valueAsDate = new Date();
+          // Check if element exists before setting value
+          const postponeDateEl = document.getElementById('follow-up-postpone-date');
+          if (postponeDateEl) {
+            postponeDateEl.valueAsDate = new Date();
+          }
         }
       }
       
