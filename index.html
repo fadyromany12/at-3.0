@@ -3943,12 +3943,11 @@
       }
 
       function populateCoachingDetails(details) {
-        // *** NEW: Add robust check for null/undefined ***
+        // *** Add robust check for null/undefined ***
         if (!details) {
           document.getElementById('coaching-detail-modal-body').innerHTML = `<p class="status-message error visible">Error: Received no details from the server. The data might be corrupted or the server function failed silently.</p>`;
           return;
         }
-        // *** END NEW SECTION ***
 
         if (details.error) {
           document.getElementById('coaching-detail-modal-body').innerHTML = `<p class="status-message error visible">Error: ${details.error}</p>`;
@@ -3961,6 +3960,33 @@
 
         let scoreDisplay = summary.OverallScore ? `${parseFloat(summary.OverallScore).toFixed(2)}%` : 'N/A';
         let fuDate = summary.FollowUpDate ? formatDate(summary.FollowUpDate) : 'N/A';
+
+        // *** NEW: Agent Acknowledgement Section ***
+        let agentAckSection = '';
+        if (selfRole === 'agent') {
+          agentAckSection = `<hr class="section-divider"><div class="form-container" style="padding: 0;">`;
+          
+          if (summary.AgentAcknowledgementTimestamp) {
+            // Agent has already acknowledged
+            agentAckSection += `
+              <div class="form-group" style="text-align: center;">
+                <p style="font-size: 1.1rem; margin: 0;"><strong>Session Acknowledged</strong></p>
+                <small class="text-color-secondary">on ${formatDate(summary.AgentAcknowledgementTimestamp)} at ${formatTime(summary.AgentAcknowledgementTimestamp)}</small>
+              </div>
+            `;
+          } else {
+            // Agent needs to acknowledge
+            agentAckSection += `
+              <div id="acknowledgement-status" class="status-message" style="margin-top: 0; margin-bottom: 15px;"></div>
+              <p class="text-color-secondary" style="text-align: center; margin-top: 0;">Please review your coaching details and click below to confirm you have read and understood the session.</p>
+              <button type="button" class="submit-btn-green" style="width: 100%; margin: 0;"
+                      onclick="submitCoachingAcknowledgement('${summary.SessionID}')">Acknowledge Coaching Session</button>
+            `;
+          }
+          agentAckSection += `</div>`;
+        }
+        // *** END NEW SECTION ***
+
 
         // *** Admin Follow-up Management Section ***
         let adminSection = '';
@@ -4014,6 +4040,8 @@
             <p style="grid-column: 1 / -1; margin: 0; white-space: pre-wrap;">${summary.FollowUpComment || 'No comments provided.'}</p>
           </div>
           
+          ${agentAckSection}
+
           ${adminSection}
           
           <hr class="section-divider">
@@ -4053,7 +4081,6 @@
         
         // Set postpone date input to today
         if (selfRole === 'admin' || selfRole === 'superadmin') {
-          // Check if element exists before setting value
           const postponeDateEl = document.getElementById('follow-up-postpone-date');
           if (postponeDateEl) {
             postponeDateEl.valueAsDate = new Date();
@@ -4141,6 +4168,30 @@
             setStatus('follow-up-status', 'error', err.message);
           })
           .webUpdateFollowUpStatus(sessionID, newStatus, newDate);
+      }
+
+      function submitCoachingAcknowledgement(sessionID) {
+        // Show processing status inside the modal
+        setStatus('acknowledgement-status', 'processing', 'Submitting acknowledgement...');
+
+        google.script.run
+          .withSuccessHandler(result => {
+            if (result.error) {
+              setStatus('acknowledgement-status', 'error', result.error);
+            } else if (result.success === false) {
+              setStatus('acknowledgement-status', 'error', result.message);
+            } else {
+              setStatus('acknowledgement-status', 'success', result.message);
+              // Refresh the main list
+              loadMyCoaching();
+              // Re-fetch details for the modal to show the updated status
+              showCoachingDetails(sessionID);
+            }
+          })
+          .withFailureHandler(err => {
+            setStatus('acknowledgement-status', 'error', err.message);
+          })
+          .webSubmitCoachingAcknowledgement(sessionID);
       }
 
 
