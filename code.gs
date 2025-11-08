@@ -326,8 +326,9 @@ function webGetCoachingHistory(filter) { // filter is unused for now, but good p
 
 /**
  * NEW: Fetches the details for a single coaching session.
+ * (MODIFIED: Renamed to webGetCoachingSessionDetails to be callable)
  */
-function getCoachingSessionDetails(sessionID) {
+function webGetCoachingSessionDetails(sessionID) {
   try {
     const ss = getSpreadsheet();
     const sessionSheet = getOrCreateSheet(ss, SHEET_NAMES.coachingSessions);
@@ -379,7 +380,7 @@ function getCoachingSessionDetails(sessionID) {
     };
 
   } catch (err) {
-    Logger.log("getCoachingSessionDetails Error: " + err.message);
+    Logger.log("webGetCoachingSessionDetails Error: " + err.message);
     return { error: err.message };
   }
 }
