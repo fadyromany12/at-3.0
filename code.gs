@@ -327,6 +327,7 @@ function webGetCoachingHistory(filter) { // filter is unused for now, but good p
 /**
  * NEW: Fetches the details for a single coaching session.
  * (MODIFIED: Renamed to webGetCoachingSessionDetails to be callable)
+ * (MODIFIED 2: Added date-to-string conversion to fix null return)
  */
 function webGetCoachingSessionDetails(sessionID) {
   try {
@@ -371,9 +372,14 @@ function webGetCoachingSessionDetails(sessionID) {
       }
     }
     
-    // Add coach name from user data if not present (good practice)
     sessionSummary.CoachName = userData.emailToName[sessionSummary.CoachEmail] || sessionSummary.CoachName;
     
+    // *** NEW: Convert Date objects to Strings before returning ***
+    sessionSummary.SessionDate = convertDateToString(new Date(sessionSummary.SessionDate));
+    sessionSummary.SubmissionTimestamp = convertDateToString(new Date(sessionSummary.SubmissionTimestamp));
+    sessionSummary.FollowUpDate = convertDateToString(new Date(sessionSummary.FollowUpDate));
+    // *** END NEW SECTION ***
+
     return {
       summary: sessionSummary,
       scores: sessionScores
