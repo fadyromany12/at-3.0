@@ -246,81 +246,210 @@ function webSubmitCoaching(sessionObject) {
 }
 
 /**
- * (REPLACED)
- * Gets coaching history for the logged-in user or their team.
- * Reads from the new CoachingSessions sheet.
- */
+ * (REPLACED)
+ * Gets coaching history for the logged-in user or their team.
+ * Reads from the new CoachingSessions sheet.
+ */
 function webGetCoachingHistory(filter) { // filter is unused for now, but good practice
-  try {
-    const userEmail = Session.getActiveUser().getEmail().toLowerCase();
-    const ss = getSpreadsheet();
-    const dbSheet = getOrCreateSheet(ss, SHEET_NAMES.database);
-    const userData = getUserDataFromDb(dbSheet);
-    const role = userData.emailToRole[userEmail] || 'agent';
-    
-    const sheet = getOrCreateSheet(ss, SHEET_NAMES.coachingSessions);
-    // Get all data as objects
-    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    const allData = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
-    
-    const allSessions = allData.map(row => {
-      let obj = {};
-      headers.forEach((header, index) => {
-        obj[header] = row[index];
-      });
-      return obj;
-    });
-    
-    const results = [];
-    
-    // Get a list of users this person manages (if they are a manager)
-    let myTeamEmails = new Set();
-    if (role === 'admin' || role === 'superadmin') {
-      // Use the hierarchy-aware function
-      const myTeamList = webGetAllSubordinateEmails(userEmail); 
-      myTeamList.forEach(email => myTeamEmails.add(email.toLowerCase()));
-    }
+  try {
+    const userEmail = Session.getActiveUser().getEmail().toLowerCase();
+    const ss = getSpreadsheet();
+    const dbSheet = getOrCreateSheet(ss, SHEET_NAMES.database);
+    const userData = getUserDataFromDb(dbSheet);
+    const role = userData.emailToRole[userEmail] || 'agent';
+    const sheet = getOrCreateSheet(ss, SHEET_NAMES.coachingSessions);
 
-    for (let i = allSessions.length - 1; i >= 0; i--) { // Go backwards from allSessions.length - 1, and include i=0
-      const session = allSessions[i];
-      if (!session || !session.AgentEmail) continue; // Skip empty/invalid rows
+    // Get all data as objects
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const allData = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+    
+    const allSessions = allData.map(row => {
+      let obj = {};
+      headers.forEach((header, index) => {
+        obj[header] = row[index];
+      });
+      return obj;
+    });
 
-      const agentEmail = session.AgentEmail.toLowerCase();
+    const results = [];
+    
+    // Get a list of users this person manages (if they are a manager)
+    let myTeamEmails = new Set();
+    if (role === 'admin' || role === 'superadmin') {
+      // Use the hierarchy-aware function
+      const myTeamList = webGetAllSubordinateEmails(userEmail);
+      myTeamList.forEach(email => myTeamEmails.add(email.toLowerCase()));
+    }
 
-      let canView = false;
-      if (role === 'agent' && agentEmail === userEmail) {
-        // An agent can see their own
-        canView = true;
-      } else if (role === 'admin' && myTeamEmails.has(agentEmail)) {
-        // An admin can see their team's
-        canView = true;
-      } else if (role === 'superadmin') {
-        // Superadmin can see all
-        canView = true;
-      }
+    for (let i = allSessions.length - 1; i >= 0; i--) {
+      const session = allSessions[i];
+      if (!session || !session.AgentEmail) continue; // Skip empty/invalid rows
 
-      if (canView) {
-        results.push({
-          sessionID: session.SessionID,
-          agentName: session.AgentName,
-          coachName: session.CoachName,
-          sessionDate: convertDateToString(new Date(session.SessionDate)),
-          weekNumber: session.WeekNumber,
-          overallScore: session.OverallScore,
-          followUpComment: session.FollowUpComment,
-          // *** NEW: Return follow-up info ***
-          followUpDate: convertDateToString(new Date(session.FollowUpDate)),
-          followUpStatus: session.FollowUpStatus
-        });
-      }
-    }
-    return results;
+      const agentEmail = session.AgentEmail.toLowerCase();
 
-  } catch (err) {
-    Logger.log("webGetCoachingHistory Error: " + err.message);
-    return { error: err.message };
-  }
+      let canView = false;
+      
+      // *** MODIFIED LOGIC HERE ***
+      if (agentEmail === userEmail) {
+        // Anyone can see their own coaching
+        canView = true;
+      } else if (role === 'admin' && myTeamEmails.has(agentEmail)) {
+        // An admin can see their team's
+        canView = true;
+      } else if (role === 'superadmin') {
+        // Superadmin can see all (team members + their own, which is covered above)
+        canView = true;
+      }
+      // *** END MODIFIED LOGIC ***
+
+      if (canView) {
+        results.push({
+          sessionID: session.SessionID,
+          agentName: session.AgentName,
+          coachName: session.CoachName,
+          sessionDate: convertDateToString(new Date(session.SessionDate)),
+          weekNumber: session.WeekNumber,
+          overallScore: session.OverallScore,
+          followUpComment: session.FollowUpComment,
+          followUpDate: convertDateToString(new Date(session.FollowUpDate)),
+          followUpStatus: session.FollowUpStatus
+        });
+      }
+    }
+    return results;
+
+  } catch (err) {
+    Logger.log("webGetCoachingHistory Error: " + err.message);
+    return { error: err.message };
+  }
 }
+
+/**
+ * NEW: Fetches the details for a single coaching session.
+ */
+function getCoachingSessionDetails(sessionID) {
+  try {
+    const ss = getSpreadsheet();
+    const sessionSheet = getOrCreateSheet(ss, SHEET_NAMES.coachingSessions);
+    const scoreSheet = getOrCreateSheet(ss, SHEET_NAMES.coachingScores);
+
+    const dbSheet = getOrCreateSheet(ss, SHEET_NAMES.database);
+    const userData = getUserDataFromDb(dbSheet);
+
+    // 1. Get Session Summary
+    const sessionHeaders = sessionSheet.getRange(1, 1, 1, sessionSheet.getLastColumn()).getValues()[0];
+    const sessionData = sessionSheet.getDataRange().getValues();
+    let sessionSummary = null;
+
+    for (let i = 1; i < sessionData.length; i++) {
+      if (sessionData[i][0] === sessionID) {
+        sessionSummary = {};
+        sessionHeaders.forEach((header, index) => {
+          sessionSummary[header] = sessionData[i][index];
+        });
+        break;
+      }
+    }
+
+    if (!sessionSummary) {
+      throw new Error("Session not found.");
+    }
+
+    // 2. Get Session Scores
+    const scoreHeaders = scoreSheet.getRange(1, 1, 1, scoreSheet.getLastColumn()).getValues()[0];
+    const scoreData = scoreSheet.getDataRange().getValues();
+    const sessionScores = [];
+
+    for (let i = 1; i < scoreData.length; i++) {
+      if (scoreData[i][0] === sessionID) {
+        let scoreObj = {};
+        scoreHeaders.forEach((header, index) => {
+          scoreObj[header] = scoreData[i][index];
+        });
+        sessionScores.push(scoreObj);
+      }
+    }
+    
+    // Add coach name from user data if not present (good practice)
+    sessionSummary.CoachName = userData.emailToName[sessionSummary.CoachEmail] || sessionSummary.CoachName;
+    
+    return {
+      summary: sessionSummary,
+      scores: sessionScores
+    };
+
+  } catch (err) {
+    Logger.log("getCoachingSessionDetails Error: " + err.message);
+    return { error: err.message };
+  }
+}
+
+/**
+ * NEW: Updates the follow-up status for a coaching session.
+ */
+function webUpdateFollowUpStatus(sessionID, newStatus, newDateStr) {
+  try {
+    const adminEmail = Session.getActiveUser().getEmail().toLowerCase();
+    const ss = getSpreadsheet();
+    
+    // Check permission
+    const dbSheet = getOrCreateSheet(ss, SHEET_NAMES.database);
+    const userData = getUserDataFromDb(dbSheet);
+    const adminRole = userData.emailToRole[adminEmail] || 'agent';
+
+    if (adminRole !== 'admin' && adminRole !== 'superadmin') {
+      throw new Error("Permission denied. Only managers can update follow-up status.");
+    }
+    
+    const sessionSheet = getOrCreateSheet(ss, SHEET_NAMES.coachingSessions);
+    const sessionData = sessionSheet.getDataRange().getValues();
+    const sessionHeaders = sessionData[0];
+    
+    // Find the column indexes
+    const statusColIndex = sessionHeaders.indexOf("FollowUpStatus");
+    const dateColIndex = sessionHeaders.indexOf("FollowUpDate");
+    
+    if (statusColIndex === -1 || dateColIndex === -1) {
+      throw new Error("Could not find 'FollowUpStatus' or 'FollowUpDate' columns in CoachingSessions sheet.");
+    }
+
+    // Find the row
+    let sessionRow = -1;
+    for (let i = 1; i < sessionData.length; i++) {
+      if (sessionData[i][0] === sessionID) {
+        sessionRow = i + 1; // 1-based index
+        break;
+      }
+    }
+
+    if (sessionRow === -1) {
+      throw new Error("Session not found.");
+    }
+
+    // Prepare new values
+    let newFollowUpDate = null;
+    if (newDateStr) {
+      newFollowUpDate = new Date(newDateStr + 'T00:00:00');
+    } else {
+      // If marking completed, use today's date
+      newFollowUpDate = new Date();
+    }
+    
+    // Update the sheet
+    sessionSheet.getRange(sessionRow, statusColIndex + 1).setValue(newStatus);
+    sessionSheet.getRange(sessionRow, dateColIndex + 1).setValue(newFollowUpDate);
+
+    SpreadsheetApp.flush(); // Ensure changes are saved
+
+    return { success: true, message: `Status updated to ${newStatus}.` };
+
+  } catch (err) {
+    Logger.log("webUpdateFollowUpStatus Error: " + err.message);
+    return { error: err.message };
+  }
+}
+
+
 // ==========================================================
 // === NEW/REPLACED COACHING FUNCTIONS (END) ===
 // ==========================================================
