@@ -3921,7 +3921,7 @@
           .withFailureHandler(err => {
             modalBody.innerHTML = `<p class="status-message error visible">Error: ${err.message}</p>`;
           })
-          .getCoachingSessionDetails(sessionID);
+          .webGetCoachingSessionDetails(sessionID); // <-- *** THIS LINE IS NOW FIXED ***
       }
 
       function closeCoachingDetails() {
@@ -4088,7 +4088,7 @@
         link.click();
         document.body.removeChild(link);
       }
-      
+
       function updateFollowUpStatus(sessionID, newStatus) {
         let newDate = null;
         
